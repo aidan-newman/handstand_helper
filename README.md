@@ -1,1 +1,1 @@
-Mediapipr landmark placement.
+Mediapipe landmark placement.
