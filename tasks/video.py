@@ -1,7 +1,8 @@
 import cv2
 from mediapipe.python.solutions import drawing_utils as mp_drawing_utils
 from mediapipe.python.solutions import pose as mp_pose
-import image
+from tasks import image
+from tasks import landmark_analysis
 
 
 def annotate_video(file=None, exit_key=27, pause_key=32):
@@ -26,6 +27,7 @@ def annotate_video(file=None, exit_key=27, pause_key=32):
     pause = False
     pause_frame = 0
     run = True
+    ms = 0
     while run:
 
         ret, frame = cap.read()
@@ -37,9 +39,10 @@ def annotate_video(file=None, exit_key=27, pause_key=32):
             frame = image.compress_image(frame, 500)
 
             pose_results = pose.process(frame)
-            # print(pose_results.pose_landmarks)
-            mp_drawing_utils.draw_landmarks(frame, pose_results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+            pose_landmarks = pose_results.pose_landmarks
+            mp_drawing_utils.draw_landmarks(frame, pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
+            landmark_analysis.check_form(pose_landmarks)
             cv2.imshow("Annotated Output", frame)
 
         if ch & 0xFF == exit_key or not ret:  # escape key
@@ -47,6 +50,7 @@ def annotate_video(file=None, exit_key=27, pause_key=32):
         elif ch & 0xFF == pause_key:
             pause = not pause
             pause_frame = cap.get(cv2.CAP_PROP_POS_FRAMES)
+        ms += 1
 
     cap.release()
     cv2.destroyAllWindows()

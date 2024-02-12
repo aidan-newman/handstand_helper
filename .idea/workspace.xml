@@ -4,12 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c23736a8-6533-488e-9772-2432613bf20c" name="Changes" comment="Mediapipe OpenCV implementation.">
-      <change afterPath="$PROJECT_DIR$/image.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/input_videos/video.mp4" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/video.py" afterDir="false" />
+    <list default="true" id="c23736a8-6533-488e-9772-2432613bf20c" name="Changes" comment="Implemented Mediapipe pose landmark recognition.">
+      <change afterPath="$PROJECT_DIR$/tasks/landmark_analysis.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/handstand_helper.iml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/image.py" beforeDir="false" afterPath="$PROJECT_DIR$/tasks/image.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/input_images/image.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/input_output/input_images/image.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/input_videos/video.mp4" beforeDir="false" afterPath="$PROJECT_DIR$/input_output/input_videos/video.mp4" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/output_images/output_image.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/video.py" beforeDir="false" afterPath="$PROJECT_DIR$/tasks/video.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -21,6 +25,17 @@
       <list>
         <option value="Python Script" />
       </list>
+    </option>
+  </component>
+  <component name="FlaskConsoleOptions" custom-start-script="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))">
+    <envs>
+      <env key="FLASK_APP" value="app" />
+    </envs>
+    <option name="myCustomStartScript" value="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))" />
+    <option name="myEnvs">
+      <map>
+        <entry key="FLASK_APP" value="app" />
+      </map>
     </option>
   </component>
   <component name="Git.Settings">
@@ -41,7 +56,7 @@
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
     &quot;git-widget-placeholder&quot;: &quot;mediapipe__video&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/aidan/PycharmProjects/handstand_helper/input_videos&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/aidan/Desktop/Exercise Files&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -57,14 +72,14 @@
       <recent name="C:\Users\aidan\PycharmProjects\handstand_helper\training_data\not_persons" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\aidan\PycharmProjects\handstand_helper\solutions" />
+      <recent name="C:\Users\aidan\PycharmProjects\handstand_helper\input_output" />
       <recent name="C:\Users\aidan\PycharmProjects\handstand_helper\output_images" />
       <recent name="C:\Users\aidan\PycharmProjects\handstand_helper\input_images" />
       <recent name="C:\Users\aidan\PycharmProjects\handstand_helper" />
-      <recent name="C:\Users\aidan\PycharmProjects\handstand_helper\validation_data\persons" />
-      <recent name="C:\Users\aidan\PycharmProjects\handstand_helper\validation_data\not_persons" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.main">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="handstand_helper" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -131,7 +146,8 @@
       <workItem from="1707409218796" duration="4793000" />
       <workItem from="1707596324613" duration="10397000" />
       <workItem from="1707619321634" duration="1794000" />
-      <workItem from="1707663052956" duration="3650000" />
+      <workItem from="1707663052956" duration="18115000" />
+      <workItem from="1707743705865" duration="628000" />
     </task>
     <task id="LOCAL-00001" summary="Mediapipe OpenCV implementation.">
       <option name="closed" value="true" />
@@ -141,7 +157,15 @@
       <option name="project" value="LOCAL" />
       <updated>1707069175733</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Implemented Mediapipe pose landmark recognition.">
+      <option name="closed" value="true" />
+      <created>1707667555566</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1707667555567</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -161,17 +185,25 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Keras person recognition." />
     <MESSAGE value="Mediapipe OpenCV implementation." />
-    <option name="LAST_COMMIT_MESSAGE" value="Mediapipe OpenCV implementation." />
+    <MESSAGE value="Implemented Mediapipe pose landmark recognition." />
+    <option name="LAST_COMMIT_MESSAGE" value="Implemented Mediapipe pose landmark recognition." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$USER_HOME$/AppData/Local/Programs/Python/Python311/Lib/site-packages/mediapipe/python/solutions/download_utils.py</url>
-          <line>25</line>
-          <option name="timeStamp" value="5" />
+          <url>file://$PROJECT_DIR$/tasks/image.py</url>
+          <line>50</line>
+          <option name="timeStamp" value="21" />
         </line-breakpoint>
       </breakpoints>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
@@ -179,7 +211,7 @@
     <SUITE FILE_PATH="coverage/handstand_helper$train.coverage" NAME="train Coverage Results" MODIFIED="1706892072976" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/handstand_helper$testing.coverage" NAME="testing Coverage Results" MODIFIED="1707403722644" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/handstand_helper$image_rec.coverage" NAME="image_rec Coverage Results" MODIFIED="1706726756948" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/handstand_helper$main.coverage" NAME="main Coverage Results" MODIFIED="1707666738970" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/handstand_helper$main.coverage" NAME="main Coverage Results" MODIFIED="1707692322126" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/handstand_helper$feature_extractor.coverage" NAME="feature_extractor Coverage Results" MODIFIED="1706891983055" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/handstand_helper$video.coverage" NAME="video Coverage Results" MODIFIED="1707618012368" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/handstand_helper$predict.coverage" NAME="predict Coverage Results" MODIFIED="1706892103831" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
