@@ -1,5 +1,4 @@
 import cv2
-import numpy
 
 
 def compress_image(img, height: int):
