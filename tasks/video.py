@@ -5,19 +5,20 @@ from tasks import image
 from tasks import landmark_analysis
 
 
-def annotate_video(file=None, exit_key=27, pause_key=32):
+def annotate_video(file=None,
+                   exit_key=27,
+                   pause_key=32,
+                   pose_options=mp_pose.Pose(
+                       model_complexity=2,
+                       min_tracking_confidence=0.6
+                   )):
     """
     Displays a window with landmarks drawn on the prominent figure.
     :param file: The video file directory to read from. If unspecified, starts live webcam feed.
     :param exit_key: ASCII code to close output window. Default: escape key
     :param pause_key: ASCII code to pause/unpause video in output window. Default: space key
+    :param pose_options: mediapipe.python.solutions.pose.Pose() object - define custom options.
     """
-    pose = mp_pose.Pose(
-        model_complexity=2,
-        enable_segmentation=True,
-        min_detection_confidence=0.75,
-        min_tracking_confidence=0.75,
-    )
 
     if file:
         cap = cv2.VideoCapture(file)
@@ -38,7 +39,7 @@ def annotate_video(file=None, exit_key=27, pause_key=32):
         elif ret:
             frame = image.compress_image(frame, 500)
 
-            pose_results = pose.process(frame)
+            pose_results = pose_options.process(frame)
             pose_landmarks = pose_results.pose_landmarks
             mp_drawing_utils.draw_landmarks(frame, pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
