@@ -37,7 +37,7 @@ def annotate_video(file=None,
         if pause:
             cap.set(cv2.CAP_PROP_POS_FRAMES, pause_frame)
         elif ret:
-            frame = image.compress_image(frame, 500)
+            frame = image.compress_image(frame, 1000)
 
             pose_results = pose_options.process(frame)
             pose_landmarks = pose_results.pose_landmarks

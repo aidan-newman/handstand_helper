@@ -1,7 +1,11 @@
 from __future__ import annotations
 import math
-import numpy as np
 from mediapipe.tasks.python.components.containers import NormalizedLandmark
+import cv2
+import numpy as np
+from pathlib import Path
+from tasks import audio
+import os
 
 LANDMARK_NAMES = (
     "nose",
@@ -11,7 +15,7 @@ LANDMARK_NAMES = (
     "right eye (inner)",
     "right eye",
     "right eye (outer)",
-    "left ear",
+    "left ear",  # 7
     "right ear",
     "mouth (left)",
     "mouth (right)",
@@ -19,7 +23,7 @@ LANDMARK_NAMES = (
     "right shoulder",
     "left elbow",
     "right elbow",
-    "left wrist",
+    "left wrist",  # 15
     "right wrist",
     "left pinky",
     "right pinky",
@@ -39,12 +43,14 @@ LANDMARK_NAMES = (
     "right foot index",
 )
 
-CORRECTIONS = (
-    "Neutral Head",
-    "Rotate Pelvis",
-    "Hips Above Shoulders",
-    "Straighten Legs",
-)
+INTERESTED_FEATURES = (0, 2, 7, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31)
+
+CORRECTIONS = {
+    "neutral_head",
+    "rotate_pelvis",
+    "hips_forward",
+    "straighten_knees"
+}
 
 VISIBILITY_THRESHOLD = 0.2
 
@@ -135,16 +141,49 @@ class Vector:
     def project(self, v: Vector) -> Vector:
         return self.dot(v.unit()) * v.unit()
 
+    def draw(self, org: Vector, img, color=(0, 0, 0)):
 
-def get_vector(i1, i2, pose_landmarks) -> Vector:
+        v = self
+        p1 = org
+        p2 = p1+v
 
-    l1 = Vector(pose_landmarks[i1].x, 1-pose_landmarks[i1].y, pose_landmarks[i1].z)
-    l2 = Vector(pose_landmarks[i2].x, 1-pose_landmarks[i2].y, pose_landmarks[i2].z)
+        cv2.arrowedLine(img,
+                        (int(p1.x), int(p1.y)),
+                        (int(p2.x), int(p2.y)),
+                        color,
+                        thickness=3,
+                        tipLength=1 / self.norm * 10
+                        )
+
+
+def get_vector(i1, i2, shape, pose_landmarks) -> Vector:
+
+    l1 = Vector(pose_landmarks[i1].x * shape[1], pose_landmarks[i1].y*shape[0])
+    l2 = Vector(pose_landmarks[i2].x * shape[1], pose_landmarks[i2].y*shape[0])
 
     return l2 - l1
 
 
-def check_form(pose_landmarks):
+def get_cords(i, shape, pose_landmarks) -> Vector:
+    return Vector(pose_landmarks[i].x * shape[1], pose_landmarks[i].y * shape[0], 0)
+
+
+def draw_opening_vector(i1, i2, i3, img, shape, pose_landmarks) -> Vector:
+
+    v1 = get_vector(i1, i2, shape, pose_landmarks)
+    v2 = get_vector(i2, i3, shape, pose_landmarks)
+    v3 = v1 + v2
+
+    p = get_cords(i2, shape, pose_landmarks)
+
+    d = v2.project(v3.normal())
+    print(LANDMARK_NAMES[i1] + "->" + LANDMARK_NAMES[i2] + "->" + LANDMARK_NAMES[i3] + ": " + str(d))
+
+    d.draw(p, img, (50, 50, 255))
+    return d
+
+
+def check_form(pose_landmarks, img):
 
     pose_landmarks = list(pose_landmarks.landmark)
 
@@ -152,9 +191,18 @@ def check_form(pose_landmarks):
         print("No landmarks found.")
         return None
 
-    should_to_hip = get_vector(11, 23, pose_landmarks)
-    hip_to_ank = get_vector(23, 27, pose_landmarks)
-    should_to_ank = should_to_hip + hip_to_ank
+    shape = img.shape
 
-    print(should_to_hip.project(should_to_ank.normal()))
-    print(hip_to_ank.project(should_to_ank.normal()))
+    for i in INTERESTED_FEATURES:
+        cv2.drawMarker(img, (int(pose_landmarks[i].x * shape[1]), int(pose_landmarks[i].y * shape[0])), (0, 255, 0))
+
+    vecs = (
+            draw_opening_vector(11, 23, 27, img, shape, pose_landmarks),
+            draw_opening_vector(15, 11, 23, img, shape, pose_landmarks),
+            draw_opening_vector(11, 23, 25, img, shape, pose_landmarks),
+            draw_opening_vector(23, 25, 27, img, shape, pose_landmarks),
+            draw_opening_vector(7, 11, 23, img, shape, pose_landmarks)
+            )
+
+    # p = Path().resolve() / "audio/hips_forward.mp3"
+    # audio.play_audio(p)

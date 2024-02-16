@@ -38,13 +38,15 @@ def annotate_image(file,
         raise ValueError("output_window and save_file can't both be False")
 
     img = cv2.imread(file)
-    img = compress_image(img, 500)
+    img = compress_image(img, 1000)
+    shape = img.shape
 
     pose_results = pose_options.process(img)
     pose_landmarks = pose_results.pose_landmarks
-    mp_drawing_utils.draw_landmarks(img, pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
-    landmark_analysis.check_form(pose_landmarks)
+    # mp_drawing_utils.draw_landmarks(img, pose_landmarks, mp_pose.POSE_CONNECTIONS)
+
+    landmark_analysis.check_form(pose_landmarks, img)
 
     if output_window:
         cv2.imshow("Annotated Image", img)
