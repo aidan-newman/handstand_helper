@@ -5,18 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c23736a8-6533-488e-9772-2432613bf20c" name="Changes" comment="Implemented Mediapipe pose landmark recognition.">
-      <change afterPath="$PROJECT_DIR$/audio/ankles_backwards.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/audio/hips_forward.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/audio/rotate_pelvis.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/audio/straighten_knees.mp3" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tasks/audio.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/input_output/output_images/annotated_image_0.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/input_output/output_images/annotated_image_0.jpg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/input_output/output_images/annotated_image_1.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/input_output/output_images/annotated_image_1.jpg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/input_output/output_images/annotated_image_2.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/input_output/output_images/annotated_image_2.jpg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tasks/image.py" beforeDir="false" afterPath="$PROJECT_DIR$/tasks/image.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tasks/landmark_analysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/tasks/landmark_analysis.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tasks/video.py" beforeDir="false" afterPath="$PROJECT_DIR$/tasks/video.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,22 +41,22 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "deletionFromPopupRequiresConfirmation": "false",
-    "git-widget-placeholder": "mediapipe__video",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "C:/Users/aidan/PycharmProjects/handstand_helper/audio",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;mediapipe__video&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/aidan/PycharmProjects/handstand_helper/audio&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\aidan\PycharmProjects\handstand_helper\audio" />
