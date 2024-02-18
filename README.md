@@ -1,1 +1,1 @@
-Mediapipe landmark placement.
+Program capable of taking an image or video input. It analyzes the form of a person performing a handstand and outputs corrections. If it's recorded live, the program will provide audio prompts so that the user can correct while in a handstand position.
