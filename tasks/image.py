@@ -1,17 +1,21 @@
 import cv2
-import mediapipe.python.solutions.pose as mp_pose
-import mediapipe.python.solutions.drawing_utils as mp_drawing_utils
-from tasks import landmark_analysis
 
 
-def compress_image(img, height: int):
+def set_size(img, size: int, set_height=True):
     """
     Compresses an image to a desired height.
     :param img: Image to compress
-    :param height: Desired height in pixels, width will scale appropriately
+    :param size: Size in pixels to set image to. Height set by default. Width scales.
+    :param set_height: Whether to set height to size. If False, set width instead.
     :return: img
     """
-    width = int(img.shape[1] * height/img.shape[0])
+    if set_height:
+        height = size
+        width = int(img.shape[1] * height/img.shape[0])
+    else:
+        width = size
+        height = int(img.shape[0] * width/img.shape[1])
+
     img = cv2.resize(
         img,
         (width, height),
@@ -19,39 +23,32 @@ def compress_image(img, height: int):
     return img
 
 
-def annotate_image(file,
-                   save_file=None,
-                   output_window=True,
-                   pose_options=mp_pose.Pose(
-                       static_image_mode=True,
-                       model_complexity=2,
-                       min_tracking_confidence=0.6
-                   )):
-    """
-    Displays a window with landmarks drawn on the prominent figure.
-    :param file: The image file directory to read from. If unspecified, starts live webcam feed.
-    :param save_file: File directory to save the output image to. If unspecified no image file is saved.
-    :param output_window: Display an output window of the annotated image. Default: True
-    :param pose_options: mediapipe.python.solutions.pose.Pose() object - define custom options.
-    """
-    if not output_window and not save_file:
-        raise ValueError("output_window and save_file can't both be False")
+def display(img, name="Output Window", hold=True):
+    cv2.imshow(name, img)
+    if hold:
+        cv2.waitKey(0)
 
-    img = cv2.imread(file)
-    img = compress_image(img, 1000)
-    shape = img.shape
 
-    pose_results = pose_options.process(img)
-    pose_landmarks = pose_results.pose_landmarks
+def save(img, file):
+    cv2.imwrite(file, img)
 
-    # mp_drawing_utils.draw_landmarks(img, pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
-    landmark_analysis.check_form(pose_landmarks, img)
+def load(file):
+    return cv2.imread(file)
 
-    if output_window:
-        cv2.imshow("Annotated Image", img)
 
-    if save_file:
-        cv2.imwrite(filename=save_file, img=img)
+def draw_landmark(img, lm, color=(0, 0, 0)):
+    cv2.drawMarker(img, (int(lm.x), int(lm.y)), color)
 
-    cv2.waitKey(0)
+
+def draw_vector(img, v, org, color=(0, 0, 0), thickness=3, head_length=8):
+    p1 = org
+    p2 = p1 + v
+
+    cv2.arrowedLine(img,
+                    (int(p1.x), int(p1.y)),
+                    (int(p2.x), int(p2.y)),
+                    color,
+                    thickness=thickness,
+                    tipLength=1 / v.norm * head_length
+                    )
