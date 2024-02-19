@@ -8,6 +8,7 @@ from mediapipe.tasks.python.components.containers import NormalizedLandmark
 from mediapipe.python.solutions import drawing_utils as mp_drawing_utils
 
 from tasks import image
+from neural_network import predict
 
 
 LANDMARK_NAMES = ("nose",
@@ -215,8 +216,12 @@ def analyze_image(img,
 
     shape = img.shape
     form_vectors = get_form_vectors(CORRECTION_TRIPLETS, shape, pose_landmarks)
+    vectors_lists = []
+    for vec in form_vectors:
+        vectors_lists.append(vec.to_list())
 
     # predict form corrections with neural network by inputting form vectors
+    corrections = predict.predict(vectors_lists)
 
     # handle annotations
     if window or save_file:
