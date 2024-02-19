@@ -2,16 +2,19 @@ from __future__ import annotations
 
 import math
 import cv2
+import mediapipe.python.solutions.drawing_utils
 
 import mediapipe.python.solutions.pose as mp_pose
 from mediapipe.tasks.python.components.containers import NormalizedLandmark
 from mediapipe.python.solutions import drawing_utils as mp_drawing_utils
+from mediapipe.python.solutions.drawing_utils import draw_landmarks
 
 from tasks import image
 from neural_network import predict
 
 
-LANDMARK_NAMES = ("nose",
+LANDMARK_NAMES = (
+    "nose",
     "left eye (inner)",
     "left eye",
     "left eye (outer)",
@@ -43,22 +46,29 @@ LANDMARK_NAMES = ("nose",
     "left heel",
     "right heel",
     "left foot index",
-    "right foot index",)
+    "right foot index"
+)
 
 INTERESTED_FEATURES = (0, 2, 7, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31)
 
 CORRECTIONS = {
-    "neutral_head",
-    "rotate_pelvis",
+    "lift_head"
+    "lower_head"
     "hips_forward",
+    "hips_backward",
+    "ankles_forward",
+    "ankles_backward",
+    "rotate_pelvis",
     "straighten_knees"
 }
 
-CORRECTION_TRIPLETS = ((11, 23, 27),
+CORRECTION_TRIPLETS = (
+    (11, 23, 27),
     (15, 11, 23),
     (11, 23, 25),
     (23, 25, 27),
-    (7, 11, 23))
+    (7 , 11, 23)
+)
 
 
 class Vector:
@@ -261,6 +271,8 @@ def analyze_video(file=None,
                   exit_key=27,
                   pause_key=32,
                   pose_options=mp_pose.Pose(
+                      static_image_mode=False,
+                      smooth_landmarks=True,
                       model_complexity=2,
                       min_tracking_confidence=0.6
                   )):
