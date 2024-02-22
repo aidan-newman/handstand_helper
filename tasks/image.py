@@ -1,4 +1,5 @@
 import cv2
+from PIL import Image
 
 
 def set_size(img, size: int, set_height=True):
@@ -24,9 +25,14 @@ def set_size(img, size: int, set_height=True):
 
 
 def display(img, name="Output Window", hold=True):
+
     cv2.imshow(name, img)
     if hold:
         cv2.waitKey(0)
+
+
+def display_with_pillow(img):
+    Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)).show()
 
 
 def save(img, file):

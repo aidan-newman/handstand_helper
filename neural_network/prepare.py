@@ -1,15 +1,62 @@
 import csv
 import json
 from pathlib import Path
+import shutil
 
 import numpy as np
 from tasks import analysis
 from tasks import image
 
 from keras.models import Sequential, model_from_json
-from keras.layers import Input, Dense, Dropout, Flatten
+from keras.layers import Dense, Dropout, Flatten
 
 INPUT_SHAPE = (5, 3)
+
+
+def label_prepper():
+
+    index = None
+    with open("training_data/labels.csv", "r") as csv_file:
+        lines = csv_file.readlines()
+        index = int(lines[-1].split('.')[0]) + 1
+
+    with open("training_data/labels.csv", 'a', newline='') as csv_file:
+        writer = csv.writer(csv_file, delimiter=',')
+
+        rows = []
+        num = 0
+        for img in Path("training_data/potential_images").iterdir():
+            if img.name.endswith(".jpg") or img.name.endswith(".png"):
+                num += 1
+                analysis.analyze_image(image.load(str(img.absolute())), False, True, hold=True, destroy_windows=False)
+
+                row = [str(index) + img.suffix]
+                for c in analysis.CORRECTIONS:
+                    invalid = True
+                    while invalid:
+                        print(c + "?:")
+                        entry = input()
+                        if str(entry).lower() == "x":
+                            shutil.move(img, Path("training_data/bad_images/" + str(index) + img.suffix))
+                            break
+                        if entry.isdigit():
+                            entry = int(entry)
+                            if entry == 0 or entry == 1:
+                                invalid = False
+                                row.append(entry)
+                    else:
+                        continue
+                    break
+
+                if len(row) == len(analysis.CORRECTIONS)+1:
+                    rows.append(row)
+                    shutil.move(img, Path("training_data/labeled_images/" + str(index) + img.suffix))
+                    index += 1
+
+        if num == 0:
+            print("No images to label.")
+            return
+        writer.writerows(rows)
 
 
 def compile_data():
@@ -95,5 +142,6 @@ def train():
         model.save_weights(str("model/.weights.h5"))
 
 
-build(INPUT_SHAPE)
-train()
+# build(INPUT_SHAPE)
+# train()
+label_prepper()

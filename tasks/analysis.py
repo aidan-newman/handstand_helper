@@ -2,12 +2,10 @@ from __future__ import annotations
 
 import math
 import cv2
-import mediapipe.python.solutions.drawing_utils
 
 import mediapipe.python.solutions.pose as mp_pose
 from mediapipe.tasks.python.components.containers import NormalizedLandmark
 from mediapipe.python.solutions import drawing_utils as mp_drawing_utils
-from mediapipe.python.solutions.drawing_utils import draw_landmarks
 
 from tasks import image
 from neural_network import predict
@@ -51,16 +49,16 @@ LANDMARK_NAMES = (
 
 INTERESTED_FEATURES = (0, 2, 7, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31)
 
-CORRECTIONS = {
-    "lift_head"
-    "lower_head"
+CORRECTIONS = (
+    "lift_head",
+    "lower_head",
     "hips_forward",
     "hips_backward",
     "ankles_forward",
     "ankles_backward",
     "rotate_pelvis",
     "straighten_knees"
-}
+)
 
 CORRECTION_TRIPLETS = (
     (11, 23, 27),
@@ -205,6 +203,7 @@ def get_form_vectors(triplets, shape, pose_landmarks) -> list:
 
 #  NEW FORMAT
 def analyze_image(img,
+                  pred=True,
                   window=False,
                   annotate=1,
                   hold=True,
@@ -213,7 +212,8 @@ def analyze_image(img,
                       static_image_mode=True,
                       model_complexity=2,
                       min_tracking_confidence=0.6
-                  )):
+                  ),
+                  destroy_windows=True):
     # annotate: 0=none, 1=just interested, 2=mediapipe
     img = image.set_size(img, 800)
 
@@ -231,7 +231,8 @@ def analyze_image(img,
         vectors_lists.append(vec.to_list())
 
     # predict form corrections with neural network by inputting form vectors
-    corrections = predict.predict(vectors_lists)
+    if pred:
+        corrections = predict.predict(vectors_lists)
 
     # handle annotations
     if window or save_file:
@@ -256,15 +257,17 @@ def analyze_image(img,
             raise ValueError("Invalid annotate parameter value.")
 
         if window:
-            image.display(img, hold=hold)
+            image.display_with_pillow(img)
         else:
             image.save(img, save_file)
 
-    cv2.destroyAllWindows()
+    if destroy_windows:
+        cv2.destroyAllWindows()
     return form_vectors
 
 
 def analyze_video(file=None,
+                  pred=True,
                   window=False,
                   annotate=1,
                   save_file=None,
@@ -297,7 +300,7 @@ def analyze_video(file=None,
         elif ret:
             frame = image.set_size(frame, 800)
 
-            analyze_image(frame, window, annotate, False, False, pose_options)
+            analyze_image(frame, pred, window, annotate, False, False, pose_options)
             # HANDLE SAVING FILE
 
         if ch & 0xFF == exit_key or not ret:  # escape key
