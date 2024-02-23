@@ -5,19 +5,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c23736a8-6533-488e-9772-2432613bf20c" name="Changes" comment="Implemented Mediapipe pose landmark recognition.">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/input_output/input_images/img.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/neural_network/training_data/labeled_images/10.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/neural_network/training_data/labeled_images/11.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/paths.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tasks/file.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/input_output/input_images/1.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/input_output/input_images/2.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/input_output/input_images/3.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/neural_network/model/.weights.h5" beforeDir="false" afterPath="$PROJECT_DIR$/neural_network/model/.weights.h5" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/neural_network/predict.py" beforeDir="false" afterPath="$PROJECT_DIR$/neural_network/predict.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/neural_network/prepare.py" beforeDir="false" afterPath="$PROJECT_DIR$/neural_network/prepare.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/neural_network/training_data/images/1.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/neural_network/training_data/images/2.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/neural_network/training_data/images/3.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/neural_network/training_data/images/4.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/neural_network/training_data/images/5.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/neural_network/training_data/images/6.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/neural_network/training_data/images/7.jpg" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/neural_network/training_data/images/8.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/neural_network/training_data/labels.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/neural_network/training_data/data.json" beforeDir="false" afterPath="$PROJECT_DIR$/neural_network/training_data/data.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/neural_network/training_data/labels.csv" beforeDir="false" afterPath="$PROJECT_DIR$/neural_network/training_data/labels.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tasks/analysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/tasks/analysis.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tasks/image.py" beforeDir="false" afterPath="$PROJECT_DIR$/tasks/image.py" afterDir="false" />
     </list>
@@ -65,6 +67,8 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Python.main.executor": "Run",
+    "Python.paths.executor": "Run",
     "Python.prepare.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
@@ -78,27 +82,27 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
+    "settings.editor.selected.configurable": "editor.preferences.completion",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\aidan\PycharmProjects\handstand_helper\neural_network\training_data\potential_images" />
+      <recent name="C:\Users\aidan\PycharmProjects\handstand_helper\input_output\input_images" />
       <recent name="C:\Users\aidan\PycharmProjects\handstand_helper\neural_network\training_data" />
       <recent name="C:\Users\aidan\PycharmProjects\handstand_helper\nn\training_data\not_correct" />
       <recent name="C:\Users\aidan\PycharmProjects\handstand_helper\audio" />
-      <recent name="C:\Users\aidan\PycharmProjects\handstand_helper\tasks" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\aidan\PycharmProjects\handstand_helper\neural_network\training_data\bad_images" />
       <recent name="C:\Users\aidan\PycharmProjects\handstand_helper\neural_network\training_data\potential_images" />
       <recent name="C:\Users\aidan\PycharmProjects\handstand_helper\neural_network\training_data\labeled_images" />
       <recent name="C:\Users\aidan\PycharmProjects\handstand_helper\neural_network\training_data" />
       <recent name="C:\Users\aidan\PycharmProjects\handstand_helper\neural_network\potential_images" />
-      <recent name="C:\Users\aidan\PycharmProjects\handstand_helper\neural_network\potential_images\training_data" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.prepare">
+  <component name="RunManager" selected="Python.main">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="handstand_helper" />
       <option name="ENV_FILES" value="" />
@@ -147,8 +151,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.prepare" />
         <item itemvalue="Python.main" />
+        <item itemvalue="Python.prepare" />
       </list>
     </recent_temporary>
   </component>
@@ -196,7 +200,13 @@
       <workItem from="1708394873221" duration="180000" />
       <workItem from="1708395107545" duration="1140000" />
       <workItem from="1708609219936" duration="6649000" />
-      <workItem from="1708615976642" duration="3452000" />
+      <workItem from="1708615976642" duration="8323000" />
+      <workItem from="1708627191083" duration="337000" />
+      <workItem from="1708630840480" duration="107000" />
+      <workItem from="1708630961421" duration="320000" />
+      <workItem from="1708631417313" duration="480000" />
+      <workItem from="1708632328336" duration="598000" />
+      <workItem from="1708701614572" duration="17243000" />
     </task>
     <task id="LOCAL-00001" summary="Mediapipe OpenCV implementation.">
       <option name="closed" value="true" />
@@ -267,6 +277,11 @@
           <line>525</line>
           <option name="timeStamp" value="36" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/tasks/analysis.py</url>
+          <line>235</line>
+          <option name="timeStamp" value="49" />
+        </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
@@ -283,14 +298,15 @@
     <SUITE FILE_PATH="coverage/handstand_helper$video.coverage" NAME="video Coverage Results" MODIFIED="1707618012368" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/handstand_helper$functional.coverage" NAME="functional Coverage Results" MODIFIED="1708302165215" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/AppData/Local/Programs/Python/Python311/Lib/site-packages/tensorflow/python/keras/engine" />
     <SUITE FILE_PATH="coverage/handstand_helper$feature_extractor.coverage" NAME="feature_extractor Coverage Results" MODIFIED="1706891983055" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/handstand_helper$prepare.coverage" NAME="prepare Coverage Results" MODIFIED="1708618796088" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/neural_network" />
+    <SUITE FILE_PATH="coverage/handstand_helper$prepare.coverage" NAME="prepare Coverage Results" MODIFIED="1708726270086" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/neural_network" />
     <SUITE FILE_PATH="coverage/handstand_helper$predict.coverage" NAME="predict Coverage Results" MODIFIED="1706892103831" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/handstand_helper$compile_json__1_.coverage" NAME="compile_json Coverage Results" MODIFIED="1708272679237" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/nn" />
-    <SUITE FILE_PATH="coverage/handstand_helper$main.coverage" NAME="main Coverage Results" MODIFIED="1708380973841" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/handstand_helper$image_rec.coverage" NAME="image_rec Coverage Results" MODIFIED="1706726756948" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/handstand_helper$main.coverage" NAME="main Coverage Results" MODIFIED="1708726306296" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/handstand_helper$landmark_analysis.coverage" NAME="landmark_analysis Coverage Results" MODIFIED="1708223064618" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tasks" />
     <SUITE FILE_PATH="coverage/handstand_helper$ahhh.coverage" NAME="ahhh Coverage Results" MODIFIED="1707621504277" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/handstand_helper$build.coverage" NAME="build Coverage Results" MODIFIED="1708273734667" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/nn" />
+    <SUITE FILE_PATH="coverage/handstand_helper$paths.coverage" NAME="paths Coverage Results" MODIFIED="1708717353922" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/handstand_helper$pixel_manip.coverage" NAME="pixel_manip Coverage Results" MODIFIED="1707760086648" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/handstand_helper$mediapipe_bs.coverage" NAME="mediapipe_bs Coverage Results" MODIFIED="1708369522881" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tasks" />
     <SUITE FILE_PATH="coverage/handstand_helper$testing.coverage" NAME="testing Coverage Results" MODIFIED="1707403722644" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

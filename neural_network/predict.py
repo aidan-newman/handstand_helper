@@ -2,20 +2,20 @@ from pathlib import Path
 
 import numpy as np
 from keras.models import model_from_json
+import paths
 
 
 def predict(vectors):
 
-    p = Path("model/structure.json").absolute()
+    p = paths.MODEL / "structure.json"
     model_structure = p.read_text()
 
     model = model_from_json(model_structure)
 
-    model.load_weights("model/.weights.h5")
+    p = paths.MODEL / ".weights.h5"
+    model.load_weights(p)
 
     x = np.array(vectors).astype("float32")
-    x = np.expand_dims(vectors, axis=0)
+    x = np.expand_dims(x, axis=0)
 
-    predictions = model.predict(x)
-
-    print(predictions)
+    return model.predict(x)

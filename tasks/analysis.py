@@ -4,20 +4,23 @@ import math
 import cv2
 
 import mediapipe.python.solutions.pose as mp_pose
+import numpy as np
 from mediapipe.tasks.python.components.containers import NormalizedLandmark
 from mediapipe.python.solutions import drawing_utils as mp_drawing_utils
 
+import paths
 from tasks import image
-from neural_network import predict
+from tasks import file
+from neural_network.predict import predict as predict_corrections
 
 
 LANDMARK_NAMES = (
     "nose",
     "left eye (inner)",
-    "left eye",
+    "left eye",  # 2
     "left eye (outer)",
     "right eye (inner)",
-    "right eye",
+    "right eye",  # 5
     "right eye (outer)",
     "left ear",  # 7
     "right ear",
@@ -29,9 +32,9 @@ LANDMARK_NAMES = (
     "right elbow",
     "left wrist",  # 15
     "right wrist",
-    "left pinky",
+    "left pinky",  # 17
     "right pinky",
-    "left index",
+    "left index",  # 19
     "right index",
     "left thumb",
     "right thumb",
@@ -47,7 +50,8 @@ LANDMARK_NAMES = (
     "right foot index"
 )
 
-INTERESTED_FEATURES = (0, 2, 7, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31)
+LEFT_FEATURES  = (0, 2, 7, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31)
+RIGHT_FEATURES = (0, 5, 8, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32)
 
 CORRECTIONS = (
     "lift_head",
@@ -60,12 +64,19 @@ CORRECTIONS = (
     "straighten_knees"
 )
 
-CORRECTION_TRIPLETS = (
+LEFT_CORRECTION_TRIPLETS = (
     (11, 23, 27),
     (15, 11, 23),
     (11, 23, 25),
     (23, 25, 27),
-    (7 , 11, 23)
+    (7,  11, 23)
+)
+RIGHT_CORRECTION_TRIPLETS = (
+    (12, 24, 28),
+    (16, 12, 24),
+    (12, 24, 28),
+    (24, 26, 28),
+    (8,  12, 24)
 )
 
 
@@ -158,6 +169,12 @@ class Vector:
     def project(self, v: Vector) -> Vector:
         return self.dot(v.unit()) * v.unit()
 
+    def flip_x(self):
+        return Vector(
+            x=-self.x,
+            y=self.y
+        )
+
 
 def get_direction_vector(i1, i2, shape, pose_landmarks) -> Vector:
     """
@@ -196,14 +213,13 @@ def get_form_vectors(triplets, shape, pose_landmarks) -> list:
         # p = get_position_vector(triplet[1], shape, pose_landmarks)
         form_vec = v2.project(v3.normal())
         form_vecs.append(form_vec)
-        # print(LANDMARK_NAMES[i1] + "->" + LANDMARK_NAMES[i2] + "->" + LANDMARK_NAMES[i3] + ": " + str(d))
 
     return form_vecs
 
 
 #  NEW FORMAT
 def analyze_image(img,
-                  pred=True,
+                  predict=True,
                   window=False,
                   annotate=1,
                   hold=True,
@@ -215,6 +231,8 @@ def analyze_image(img,
                   ),
                   destroy_windows=True):
     # annotate: 0=none, 1=just interested, 2=mediapipe
+    if not isinstance(img, np.ndarray):
+        raise ValueError("Invalid image object. Pass a np.ndarray object.")
     img = image.set_size(img, 800)
 
     pose_results = pose_options.process(img)
@@ -223,51 +241,80 @@ def analyze_image(img,
     if isinstance(pose_landmarks[0], NormalizedLandmark):
         print("No landmarks found.")
         return
+    pose_landmarks = list(pose_results.pose_landmarks.landmark)
 
     shape = img.shape
-    form_vectors = get_form_vectors(CORRECTION_TRIPLETS, shape, pose_landmarks)
-    vectors_lists = []
+
+    # determine which side of the person is prominent
+    left_sum = 0
+    right_sum = 0
+    for i, j in zip(LEFT_FEATURES, RIGHT_FEATURES):
+        left_sum += pose_landmarks[i].visibility
+        right_sum += pose_landmarks[j].visibility
+
+    # get appropriate vectors based on side visible
+    if left_sum >= right_sum:
+        form_vectors = get_form_vectors(LEFT_CORRECTION_TRIPLETS, shape, pose_landmarks)
+    else:
+        form_vectors = get_form_vectors(RIGHT_CORRECTION_TRIPLETS, shape, pose_landmarks)
+
+    # convert vectors to a list of lists for ease of access in other modules
+    vectors_list = []
     for vec in form_vectors:
-        vectors_lists.append(vec.to_list())
+        #  normalize vectors left side of a person (simply flip x components)
+        if right_sum > left_sum:
+            vectors_list.append(vec.flip_x().to_list())
+        else:
+            vectors_list.append(vec.to_list())
 
     # predict form corrections with neural network by inputting form vectors
-    if pred:
-        corrections = predict.predict(vectors_lists)
+    if predict:
+        corrections = predict_corrections(vectors_list)
+        print(corrections)
 
     # handle annotations
     if window or save_file:
+        if annotate == 1:  # only show relevant features and form vectors
 
-        if annotate == 1:
-            for i in INTERESTED_FEATURES:
+            if left_sum >= right_sum:
+                features = LEFT_FEATURES
+                triplets = LEFT_CORRECTION_TRIPLETS
+            else:
+                features = RIGHT_FEATURES
+                triplets = RIGHT_CORRECTION_TRIPLETS
+
+            for i in features:
                 image.draw_landmark(img, get_position_vector(i, shape, pose_landmarks), (0, 255, 0))
-                i = 0
+                j = 0
                 for vec in form_vectors:
                     image.draw_vector(
                         img,
                         vec,
-                        get_position_vector(CORRECTION_TRIPLETS[i][1], shape, pose_landmarks),
+                        get_position_vector(triplets[j][1], shape, pose_landmarks),
                         (0, 0, 255)
                     )
-                    i += 1
+                    j += 1
 
-        elif annotate == 2:
-            mp_drawing_utils.draw_landmarks(img, pose_landmarks, mp_pose.POSE_CONNECTIONS)
+        elif annotate == 2:  # use mediapipe's drawing util to draw landmarks and connections
+            mp_drawing_utils.draw_landmarks(img, pose_results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
-        elif annotate != 0:
+        elif annotate != 0:  # don't do any annotations if 0, if other value: error
             raise ValueError("Invalid annotate parameter value.")
 
         if window:
             image.display_with_pillow(img)
-        else:
-            image.save(img, save_file)
+        if save_file:
+            image.save(img, paths.OUTPUT_IMAGES, "output_image")
 
     if destroy_windows:
         cv2.destroyAllWindows()
-    return form_vectors
+
+    print(vectors_list)
+    return vectors_list
 
 
-def analyze_video(file=None,
-                  pred=True,
+def analyze_video(filepath=None,
+                  predict=True,
                   window=False,
                   annotate=1,
                   save_file=None,
@@ -281,8 +328,8 @@ def analyze_video(file=None,
                   )):
     # annotate: 0=none, 1=just interested, 2=mediapipe
 
-    if file:
-        cap = cv2.VideoCapture(file)
+    if filepath:
+        cap = cv2.VideoCapture(filepath)
     else:
         cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
@@ -300,8 +347,8 @@ def analyze_video(file=None,
         elif ret:
             frame = image.set_size(frame, 800)
 
-            analyze_image(frame, pred, window, annotate, False, False, pose_options)
-            # HANDLE SAVING FILE
+            analyze_image(frame, predict, window, annotate, False, False, pose_options)
+            #  HANDLE SAVING FILE
 
         if ch & 0xFF == exit_key or not ret:  # escape key
             run = False

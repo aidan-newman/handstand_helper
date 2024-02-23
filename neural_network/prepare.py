@@ -1,34 +1,48 @@
 import csv
 import json
-from pathlib import Path
 import shutil
 
 import numpy as np
+
+import paths
 from tasks import analysis
 from tasks import image
+from tasks import file
 
 from keras.models import Sequential, model_from_json
 from keras.layers import Dense, Dropout, Flatten
 
+
+IMAGE_SAVE_HEIGHT = 800
 INPUT_SHAPE = (5, 3)
 
 
 def label_prepper():
 
-    index = None
-    with open("training_data/labels.csv", "r") as csv_file:
+    with open(paths.TRAINING_DATA / "labels.csv", "r") as csv_file:
         lines = csv_file.readlines()
         index = int(lines[-1].split('.')[0]) + 1
 
-    with open("training_data/labels.csv", 'a', newline='') as csv_file:
+    with open(paths.TRAINING_DATA / "labels.csv", 'a', newline='') as csv_file:
         writer = csv.writer(csv_file, delimiter=',')
 
+        cancel = False
         rows = []
         num = 0
-        for img in Path("training_data/potential_images").iterdir():
+        for img in (paths.TRAINING_DATA / "potential_images").iterdir():
+            if cancel:
+                break
             if img.name.endswith(".jpg") or img.name.endswith(".png"):
                 num += 1
-                analysis.analyze_image(image.load(str(img.absolute())), False, True, hold=True, destroy_windows=False)
+                image.compress_file(img, height=IMAGE_SAVE_HEIGHT)
+                analysis.analyze_image(image.load(img),
+                                       save_file=False,
+                                       predict=True,
+                                       window=True,
+                                       hold=True,
+                                       destroy_windows=False,
+                                       annotate=1
+                                       )
 
                 row = [str(index) + img.suffix]
                 for c in analysis.CORRECTIONS:
@@ -36,10 +50,14 @@ def label_prepper():
                     while invalid:
                         print(c + "?:")
                         entry = input()
-                        if str(entry).lower() == "x":
-                            shutil.move(img, Path("training_data/bad_images/" + str(index) + img.suffix))
+
+                        if str(entry).lower().strip() == "x":
+                            file.safe_move(img, paths.TRAINING_DATA / "bad_images")
                             break
-                        if entry.isdigit():
+                        elif str(entry).lower() == "stop":
+                            cancel = True
+                            break
+                        elif entry.isdigit():
                             entry = int(entry)
                             if entry == 0 or entry == 1:
                                 invalid = False
@@ -50,7 +68,7 @@ def label_prepper():
 
                 if len(row) == len(analysis.CORRECTIONS)+1:
                     rows.append(row)
-                    shutil.move(img, Path("training_data/labeled_images/" + str(index) + img.suffix))
+                    shutil.move(img, paths.TRAINING_DATA / "labeled_images/" / (str(index) + img.suffix))
                     index += 1
 
         if num == 0:
@@ -61,25 +79,25 @@ def label_prepper():
 
 def compile_data():
 
-    with open("training_data/labels.csv", newline='', mode='r') as readfile:
+    with open(paths.TRAINING_DATA / "labels.csv", newline='', mode='r') as readfile:
 
         reader = csv.reader(readfile)
         data = {}
 
-        next(reader)  # skip column titles
         for row in reader:
             img_data = []
-            for file in Path("training_data/images").glob(str(row[0]) + ".*"):
-                vecs = analysis.analyze_image(image.load(str(file.absolute())))
+            print(str(row[0]))
+            for img in (paths.TRAINING_DATA / "labeled_images").glob(str(row[0])):
+                vecs = analysis.analyze_image(image.load(img))
                 img_data.append(int(row[1]))
                 img_data.append(int(row[2]))
                 for vec in vecs:
-                    img_data.append(vec.to_list())
+                    img_data.append(vec)
                 data[row[0]] = img_data
 
         json_obj = json.dumps(data)
 
-        Path("training_data/data.json").write_text(json_obj)
+        (paths.TRAINING_DATA / "data.json").write_text(json_obj)
         print("Labels and vectors written to data.json.")
 
 
@@ -102,13 +120,13 @@ def build(shape):
     print(model.summary())
 
     model_structure = model.to_json()
-    p = Path("model/structure.json")
+    p = paths.MODEL / "structure.json"
     p.write_text(model_structure)
 
 
 def train():
     # Path to folders with training data
-    with open("training_data/data.json", 'r') as json_in:
+    with open(paths.TRAINING_DATA / "data.json", 'r') as json_in:
         datas = json.load(json_in)
 
         all_vectors = []
@@ -126,7 +144,7 @@ def train():
         y_train = np.array(all_labels).astype("float64")
 
         # continue..
-        p = Path("model/structure.json")
+        p = paths.MODEL / "structure.json"
         structure = p.read_text()
 
         model = model_from_json(structure)
@@ -134,7 +152,7 @@ def train():
         model.fit(
             x_train,
             y_train,
-            batch_size=5,
+            batch_size=6,
             epochs=100,
             shuffle=True
         )
@@ -142,6 +160,7 @@ def train():
         model.save_weights(str("model/.weights.h5"))
 
 
-# build(INPUT_SHAPE)
-# train()
-label_prepper()
+build(INPUT_SHAPE)
+train()
+# label_prepper()
+# compile_data()

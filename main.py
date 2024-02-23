@@ -1,14 +1,12 @@
 from tasks import analysis
 from tasks import image
-from pathlib import Path
-
-IMG_IN_FOLD = Path("input_output/input_images")
-IMG_OUT_FOLD = Path("input_output/output_images")
+import paths
 
 
 def main(*args, **kwargs):
 
-    pass
+    for img in paths.INPUT_IMAGES.iterdir():
+        analysis.analyze_image(image.load(img), window=True, predict=True)
 
 
 if __name__ == "__main__":

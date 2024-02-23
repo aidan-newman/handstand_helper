@@ -1,5 +1,8 @@
 import cv2
-from PIL import Image
+from pathlib import Path
+from numpy import ndarray
+from PIL import Image as pillowImage
+import subprocess
 
 
 def set_size(img, size: int, set_height=True):
@@ -24,6 +27,25 @@ def set_size(img, size: int, set_height=True):
     return img
 
 
+def compress_file(file, width=None, height=None, ignore_if_smaller=True, quality=90):
+    img = pillowImage.open(file)
+
+    if width:
+        if img.size[0] <= width and ignore_if_smaller:
+            return
+        img = img.resize((width, int(width/img.size[0] * img.size[1])))
+    elif height:
+        if img.size[1] <= height and ignore_if_smaller:
+            return
+        img = img.resize((int(height/img.size[1] * img.size[0]), height))
+
+    try:
+        img.save(file, quality=quality, optimize=True)
+    except OSError:
+        img = img.convert("RGB")
+        img.save(file, quality=quality, optimize=True)
+
+
 def display(img, name="Output Window", hold=True):
 
     cv2.imshow(name, img)
@@ -31,16 +53,36 @@ def display(img, name="Output Window", hold=True):
         cv2.waitKey(0)
 
 
-def display_with_pillow(img):
-    Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)).show()
+def display_with_pillow(img, name="Output Window"):
+    if isinstance(img, ndarray):
+        pillowImage.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)).show(name)
+    elif isinstance(img, Path):
+        ary = load(img)
+        pillowImage.fromarray(cv2.cvtColor(ary, cv2.COLOR_BGR2RGB)).show(img.name)
+    else:
+        raise ValueError("Invalid image type. Pass an np.ndarray or a pathlib.Path.")
 
 
-def save(img, file):
-    cv2.imwrite(file, img)
+def save(img, file, name):
+    #  save image, if the same file already exists add a valid copy number (ex. image(#).png)
+    fail = True
+    copy_num = 0
+    while fail:
+        if copy_num:
+            save_location = file / (name + "(" + str(copy_num) + ").png")
+        else:
+            save_location = file / (name + ".png")
+
+        if not save_location.is_file():
+            cv2.imwrite(str(save_location), img)
+            fail = False
+        else:
+            copy_num += 1
+    return
 
 
 def load(file):
-    return cv2.imread(file)
+    return cv2.imread(str(file))
 
 
 def draw_landmark(img, lm, color=(0, 0, 0)):
