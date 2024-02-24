@@ -309,7 +309,6 @@ def analyze_image(img,
     if destroy_windows:
         cv2.destroyAllWindows()
 
-    print(vectors_list)
     return vectors_list
 
 

@@ -37,7 +37,7 @@ def label_prepper():
                 image.compress_file(img, height=IMAGE_SAVE_HEIGHT)
                 analysis.analyze_image(image.load(img),
                                        save_file=False,
-                                       predict=True,
+                                       predict=False,
                                        window=True,
                                        hold=True,
                                        destroy_windows=False,
@@ -86,11 +86,16 @@ def compile_data():
 
         for row in reader:
             img_data = []
-            print(str(row[0]))
             for img in (paths.TRAINING_DATA / "labeled_images").glob(str(row[0])):
-                vecs = analysis.analyze_image(image.load(img))
+                vecs = analysis.analyze_image(image.load(img), predict=False)
                 img_data.append(int(row[1]))
                 img_data.append(int(row[2]))
+                img_data.append(int(row[3]))
+                img_data.append(int(row[4]))
+                img_data.append(int(row[5]))
+                img_data.append(int(row[6]))
+                img_data.append(int(row[7]))
+                img_data.append(int(row[8]))
                 for vec in vecs:
                     img_data.append(vec)
                 data[row[0]] = img_data
@@ -107,9 +112,9 @@ def build(shape):
 
     model.add(Dense(24, input_shape=shape, activation="relu"))  # input layer kernel_initializer='he_uniform',
     model.add(Flatten())
-    model.add(Dense(24, activation="relu"))  # hidden layer
+    model.add(Dense(200, activation="relu"))  # hidden layer
     model.add(Dropout(0.25))  # dropout
-    model.add(Dense(2, activation="sigmoid"))  # output layer
+    model.add(Dense(8, activation="sigmoid"))  # output layer
 
     model.compile(
         loss="binary_crossentropy",
@@ -134,8 +139,8 @@ def train():
 
         # Load all the not-dog images
         for data in datas.values():
-            vectors = data[2:]
-            labels = data[0:2]
+            vectors = data[8:]
+            labels = data[0:8]
 
             all_vectors.append(vectors)
             all_labels.append(labels)
@@ -152,15 +157,15 @@ def train():
         model.fit(
             x_train,
             y_train,
-            batch_size=6,
-            epochs=100,
+            batch_size=10,
+            epochs=200,
             shuffle=True
         )
 
         model.save_weights(str("model/.weights.h5"))
 
 
-build(INPUT_SHAPE)
-train()
 # label_prepper()
 # compile_data()
+# build(INPUT_SHAPE)
+# train()

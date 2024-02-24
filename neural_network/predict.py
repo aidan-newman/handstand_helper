@@ -18,4 +18,12 @@ def predict(vectors):
     x = np.array(vectors).astype("float32")
     x = np.expand_dims(x, axis=0)
 
-    return model.predict(x)
+    predictions = model.predict(x)[0]
+
+    i = 0
+    for num in predictions:
+        predictions[i] = '{:.2f}'.format(num)
+        i += 1
+    predictions = np.array(predictions, dtype=str)
+
+    return predictions
