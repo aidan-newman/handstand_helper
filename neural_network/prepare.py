@@ -112,8 +112,8 @@ def build(shape):
 
     model.add(Dense(24, input_shape=shape, activation="relu"))  # input layer kernel_initializer='he_uniform',
     model.add(Flatten())
-    model.add(Dense(200, activation="relu"))  # hidden layer
-    model.add(Dropout(0.25))  # dropout
+    model.add(Dense(224, activation="relu"))  # hidden layer
+    model.add(Dropout(0.1))
     model.add(Dense(8, activation="sigmoid"))  # output layer
 
     model.compile(
@@ -157,8 +157,8 @@ def train():
         model.fit(
             x_train,
             y_train,
-            batch_size=10,
-            epochs=200,
+            batch_size=6,
+            epochs=1000,
             shuffle=True
         )
 
@@ -166,6 +166,6 @@ def train():
 
 
 # label_prepper()
-# compile_data()
-# build(INPUT_SHAPE)
-# train()
+compile_data()
+build(INPUT_SHAPE)
+train()

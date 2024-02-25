@@ -302,7 +302,8 @@ def analyze_image(img,
             raise ValueError("Invalid annotate parameter value.")
 
         if window:
-            image.display_with_pillow(img)
+            image.display(img, "Output", hold)
+            # image.display_with_pillow(img)
         if save_file:
             image.save(img, paths.OUTPUT_IMAGES, "output_image")
 
