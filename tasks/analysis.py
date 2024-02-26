@@ -268,9 +268,14 @@ def analyze_image(img,
             vectors_list.append(vec.to_list())
 
     # predict form corrections with neural network by inputting form vectors
+    corrections = None
     if predict:
         corrections = predict_corrections(vectors_list)
-        print(corrections)
+        i = 0
+        for correction in CORRECTIONS:
+            if float(corrections[i]) > 0.09:
+                print(correction + ": " + str(corrections[i]))
+            i += 1
 
     # handle annotations
     if window or save_file:
@@ -310,7 +315,7 @@ def analyze_image(img,
     if destroy_windows:
         cv2.destroyAllWindows()
 
-    return vectors_list
+    return corrections, vectors_list
 
 
 def analyze_video(filepath=None,

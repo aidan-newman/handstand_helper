@@ -11,6 +11,7 @@ from tasks import file
 
 from keras.models import Sequential, model_from_json
 from keras.layers import Dense, Dropout, Flatten
+from keras.callbacks import ModelCheckpoint
 
 
 IMAGE_SAVE_HEIGHT = 800
@@ -87,7 +88,7 @@ def compile_data():
         for row in reader:
             img_data = []
             for img in (paths.TRAINING_DATA / "labeled_images").glob(str(row[0])):
-                vecs = analysis.analyze_image(image.load(img), predict=False)
+                _, vecs = analysis.analyze_image(image.load(img), predict=False)
                 img_data.append(int(row[1]))
                 img_data.append(int(row[2]))
                 img_data.append(int(row[3]))
@@ -158,14 +159,21 @@ def train():
             x_train,
             y_train,
             batch_size=6,
-            epochs=1000,
-            shuffle=True
+            epochs=200,
+            shuffle=True,
+            callbacks=[
+                ModelCheckpoint("model/.weights.h5",
+                                monitor="loss",
+                                verbose=1,
+                                save_weights_only=True,
+                                save_best_only=True),
+            ]
         )
 
-        model.save_weights(str("model/.weights.h5"))
+        # model.save_weights("model/.weights.h5")
 
 
 # label_prepper()
-compile_data()
+# compile_data()
 build(INPUT_SHAPE)
 train()
