@@ -217,6 +217,23 @@ def get_form_vectors(triplets, shape, pose_landmarks) -> list:
     return form_vecs
 
 
+def find_significant_correction(cor_arys, threshold=0.7):
+
+    sums = np.array([])
+    for i in range(len(cor_arys[0])):
+        col_sum = 0
+        for ary in cor_arys:
+            col_sum += float(ary[i])
+    avgs = sums / len(cor_arys)
+
+    indices = []
+    i = 0
+    for avg in avgs:
+        if avg >= threshold:
+            indices.append(i)
+    return indices
+
+
 #  NEW FORMAT
 def analyze_image(img,
                   predict=True,
@@ -236,6 +253,9 @@ def analyze_image(img,
     img = image.set_size(img, 800)
 
     pose_results = pose_options.process(img)
+    if not pose_results.pose_landmarks:
+        print("No landmarks found.")
+        return None, None
     pose_landmarks = list(pose_results.pose_landmarks.landmark)
 
     if isinstance(pose_landmarks[0], NormalizedLandmark):
@@ -329,19 +349,23 @@ def analyze_video(filepath=None,
                       static_image_mode=False,
                       smooth_landmarks=True,
                       model_complexity=2,
-                      min_tracking_confidence=0.6
-                  )):
+                      min_tracking_confidence=0.6),
+                  period=1000,
+                  ):
     # annotate: 0=none, 1=just interested, 2=mediapipe
 
     if filepath:
-        cap = cv2.VideoCapture(filepath)
+        cap = cv2.VideoCapture(str(filepath))
     else:
         cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, 2)
 
     pause = False
     pause_frame = 0
     run = True
-    ms = 0
+    target_ms = int(cap.get(cv2.CAP_PROP_POS_MSEC)) + period
+    cor_arys = []
     while run:
 
         ret, frame = cap.read()
@@ -352,15 +376,22 @@ def analyze_video(filepath=None,
         elif ret:
             frame = image.set_size(frame, 800)
 
-            analyze_image(frame, predict, window, annotate, False, False, pose_options)
-            #  HANDLE SAVING FILE
+            cors, _ = analyze_image(frame, predict, window, annotate, False, False, pose_options, destroy_windows=False)
+            cor_arys.append(cors)
+            if int(cap.get(cv2.CAP_PROP_POS_MSEC)) >= target_ms:
+                sig_cors = find_significant_correction(cor_arys)
+                cor_lbls = ""
+                for i in sig_cors:
+                    cor_lbls += CORRECTIONS[i] + "\n"
+                print("Corrections:\n" + cor_lbls)
+                cor_arys.clear()
+                target_ms += period
 
         if ch & 0xFF == exit_key or not ret:  # escape key
             run = False
         elif ch & 0xFF == pause_key:
             pause = not pause
             pause_frame = cap.get(cv2.CAP_PROP_POS_FRAMES)
-        ms += 1
 
     cap.release()
     cv2.destroyAllWindows()
