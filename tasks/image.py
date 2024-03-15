@@ -2,7 +2,6 @@ import cv2
 from pathlib import Path
 from numpy import ndarray
 from PIL import Image as pillowImage
-import subprocess
 
 
 def set_size(img, size: int, set_height=True):
@@ -51,6 +50,7 @@ def display(img, name="Output Window", hold=True):
     cv2.imshow(name, img)
     if hold:
         cv2.waitKey(0)
+    cv2.waitKey(1)
 
 
 def display_with_pillow(img, name="Output Window"):

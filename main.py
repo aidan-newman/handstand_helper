@@ -1,18 +1,15 @@
 from tasks import analysis
-from tasks import image
+from neural_network.predict import load_model
 import paths
+from tasks import image
 
 
 def main(*args, **kwargs):
 
-    for vid in paths.INPUT_VIDEOS.iterdir():
-        corrections, _ = analysis.analyze_video(window=True, predict=True)
+    model = load_model()
+    # analysis.analyze_video(model=model, window=True)
 
-    # i = 0
-    # for correction in analysis.CORRECTIONS:
-    #     if corrections[i] > 0.09:
-    #         print(correction + ": " + str(corrections[i]))
-    #     i += 1
+    analysis.analyze_image(model=model, window=True, hold=True, img=image.load(paths.INPUT_IMAGES / "37.jpg"))
 
 
 if __name__ == "__main__":

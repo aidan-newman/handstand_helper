@@ -20,67 +20,71 @@ INPUT_SHAPE = (5, 3)
 
 def label_prepper():
 
-    with open(paths.TRAINING_DATA / "labels.csv", "r") as csv_file:
-        lines = csv_file.readlines()
-        index = int(lines[-1].split('.')[0]) + 1
+    # open csv file
+    try:
+        csv_file = open(paths.TRAINING_DATA / "labels.csv", "r")
+    except OSError:
+        raise OSError("Couldn't open csv_file in read mode.")
 
-    with open(paths.TRAINING_DATA / "labels.csv", 'a', newline='') as csv_file:
-        writer = csv.writer(csv_file, delimiter=',')
+    lines = csv_file.readlines()
+    index = int(lines[-1].split('.')[0]) + 1
 
-        cancel = False
-        rows = []
-        num = 0
-        for img in (paths.TRAINING_DATA / "potential_images").iterdir():
-            if cancel:
+    try:
+        csv_file = open(paths.TRAINING_DATA / "labels.csv", 'a', newline='')
+    except OSError:
+        raise OSError("Couldn't open csv_file in append mode.")
+
+    writer = csv.writer(csv_file, delimiter=',')
+
+    cancel = False
+    rows = []
+    img_count = 0
+    for img in (paths.TRAINING_DATA / "potential_images").iterdir():
+        if cancel:
+            break
+        if img.name.endswith(".jpg") or img.name.endswith(".png"):
+            img_count += 1
+            image.compress_file(img, height=IMAGE_SAVE_HEIGHT)
+
+            row = [str(index) + img.suffix]
+            for c in analysis.CORRECTIONS:
+                invalid = True
+                while invalid:
+                    print(c + "?:")
+                    entry = input()
+
+                    if str(entry).lower().strip() == "x":
+                        file.safe_move(img, paths.TRAINING_DATA / "bad_images")
+                        break
+                    elif str(entry).lower() == "stop":
+                        cancel = True
+                        break
+                    elif entry.isdigit():
+                        entry = int(entry)
+                        if entry == 0 or entry == 1:
+                            invalid = False
+                            row.append(entry)
+                else:
+                    continue
                 break
-            if img.name.endswith(".jpg") or img.name.endswith(".png"):
-                num += 1
-                image.compress_file(img, height=IMAGE_SAVE_HEIGHT)
-                analysis.analyze_image(image.load(img),
-                                       save_file=False,
-                                       predict=False,
-                                       window=True,
-                                       hold=True,
-                                       destroy_windows=False,
-                                       annotate=1
-                                       )
 
-                row = [str(index) + img.suffix]
-                for c in analysis.CORRECTIONS:
-                    invalid = True
-                    while invalid:
-                        print(c + "?:")
-                        entry = input()
+            if len(row) == len(analysis.CORRECTIONS)+1:
+                rows.append(row)
+                shutil.move(img, paths.TRAINING_DATA / "labeled_images/" / (str(index) + img.suffix))
+                index += 1
 
-                        if str(entry).lower().strip() == "x":
-                            file.safe_move(img, paths.TRAINING_DATA / "bad_images")
-                            break
-                        elif str(entry).lower() == "stop":
-                            cancel = True
-                            break
-                        elif entry.isdigit():
-                            entry = int(entry)
-                            if entry == 0 or entry == 1:
-                                invalid = False
-                                row.append(entry)
-                    else:
-                        continue
-                    break
-
-                if len(row) == len(analysis.CORRECTIONS)+1:
-                    rows.append(row)
-                    shutil.move(img, paths.TRAINING_DATA / "labeled_images/" / (str(index) + img.suffix))
-                    index += 1
-
-        if num == 0:
-            print("No images to label.")
-            return
-        writer.writerows(rows)
+    if img_count == 0:
+        print("No images to label.")
+        return
+    writer.writerows(rows)
+    print("Image labels appended to csv file.")
 
 
-def compile_data():
+def compile_data(model):
 
-    with open(paths.TRAINING_DATA / "labels.csv", newline='', mode='r') as readfile:
+    try:
+        # read from csv file of labels
+        readfile = open(paths.TRAINING_DATA / "labels.csv", newline='', mode='r')
 
         reader = csv.reader(readfile)
         data = {}
@@ -88,15 +92,12 @@ def compile_data():
         for row in reader:
             img_data = []
             for img in (paths.TRAINING_DATA / "labeled_images").glob(str(row[0])):
-                _, vecs = analysis.analyze_image(image.load(img), predict=False)
-                img_data.append(int(row[1]))
-                img_data.append(int(row[2]))
-                img_data.append(int(row[3]))
-                img_data.append(int(row[4]))
-                img_data.append(int(row[5]))
-                img_data.append(int(row[6]))
-                img_data.append(int(row[7]))
-                img_data.append(int(row[8]))
+                # COME BACK
+
+                _, vecs, _, _ = analysis.analyze_image(image.load(img), model, predict=False)
+                for i in range(1, 9):
+                    img_data.append(int(row[i]))
+
                 for vec in vecs:
                     img_data.append(vec)
                 data[row[0]] = img_data
@@ -105,6 +106,9 @@ def compile_data():
 
         (paths.TRAINING_DATA / "data.json").write_text(json_obj)
         print("Labels and vectors written to data.json.")
+        return
+    except OSError:
+        raise OSError("Couldn't open csv_file in read mode.")
 
 
 def build(shape):
@@ -173,7 +177,8 @@ def train():
         # model.save_weights("model/.weights.h5")
 
 
-# label_prepper()
-# compile_data()
-build(INPUT_SHAPE)
-train()
+# main
+if __name__ == "__main__":
+    print("Would you like to:\n"
+          "[1]: prep labels,\n"
+          "[2]: ")

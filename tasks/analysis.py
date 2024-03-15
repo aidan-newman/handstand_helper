@@ -6,11 +6,10 @@ import cv2
 import mediapipe.python.solutions.pose as mp_pose
 import numpy as np
 from mediapipe.tasks.python.components.containers import NormalizedLandmark
-from mediapipe.python.solutions import drawing_utils as mp_drawing_utils
 
 import paths
 from tasks import image
-from tasks import file
+from tasks import video
 from neural_network.predict import predict as predict_corrections
 
 
@@ -50,8 +49,8 @@ LANDMARK_NAMES = (
     "right foot index"
 )
 
-LEFT_FEATURES  = (0, 2, 7, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31)
-RIGHT_FEATURES = (0, 5, 8, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32)
+LEFT_LANDMARKS  = (0, 2, 7, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31)
+RIGHT_LANDMARKS = (0, 5, 8, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32)
 
 CORRECTIONS = (
     "lift_head",
@@ -77,6 +76,18 @@ RIGHT_CORRECTION_TRIPLETS = (
     (12, 24, 28),
     (24, 26, 28),
     (8,  12, 24)
+)
+
+STATIC_POSE_OPTIONS = mp_pose.Pose(
+    static_image_mode=True,
+    model_complexity=2,
+    min_tracking_confidence=0.6
+)
+NONSTATIC_POSE_OPTIONS = mp_pose.Pose(
+    static_image_mode=False,
+    smooth_landmarks=True,
+    model_complexity=2,
+    min_tracking_confidence=0.6
 )
 
 
@@ -176,6 +187,69 @@ class Vector:
         )
 
 
+class HandstandFeatures:
+
+    def __init__(self, img, static):
+
+        self.pose_landmarks = self.get_pose_landmarks(img, static)
+        self.form_vectors = None
+        self.left_visible = True
+
+        if self.pose_landmarks:
+            self.form_vectors, self.left_visible = self.get_form_vectors(self.pose_landmarks, img.shape)
+
+    @staticmethod
+    def get_pose_landmarks(img, static):
+        #  note: compresses image to a height of 800 -- image object is mutable, don't repeat
+        if static:
+            pose_options = STATIC_POSE_OPTIONS
+        else:
+            pose_options = NONSTATIC_POSE_OPTIONS
+
+        if not isinstance(img, np.ndarray):
+            raise ValueError("Invalid image object. Pass a np.ndarray object.")
+        img = image.set_size(img, 800)
+
+        # get pose landmarks from image
+        # make sure this works !!
+        pose_results = pose_options.process(img)
+        if pose_results.pose_landmarks:
+            pose_landmarks = list(pose_results.pose_landmarks.landmark)
+            if not isinstance(pose_landmarks[0], NormalizedLandmark):  # double check this makes sense !!
+                return pose_landmarks
+        print("No landmarks found.")
+        return None
+
+    @staticmethod
+    def get_form_vectors(pose_landmarks, shape):
+        # determine which side of person is visible
+        left_sum = 0
+        right_sum = 0
+        for i, j in zip(LEFT_LANDMARKS, RIGHT_LANDMARKS):
+            left_sum += pose_landmarks[i].visibility
+            right_sum += pose_landmarks[j].visibility
+
+        left_visible = True
+        if left_sum >= right_sum:
+            triplets = LEFT_CORRECTION_TRIPLETS
+        else:
+            triplets = RIGHT_CORRECTION_TRIPLETS
+            left_visible = False
+
+        # create list of Vectors from landmarks
+        form_vectors = []
+        for triplet in triplets:
+            v1 = get_direction_vector(triplet[0], triplet[1], shape, pose_landmarks)
+            v2 = get_direction_vector(triplet[1], triplet[2], shape, pose_landmarks)
+            v3 = v1 + v2
+
+            # p = get_position_vector(triplet[1], shape, pose_landmarks)
+            vector = v2.project(v3.normal())
+            form_vectors.append(vector)
+
+        return form_vectors, left_visible
+
+
 def get_direction_vector(i1, i2, shape, pose_landmarks) -> Vector:
     """
     Returns the direction vector from pose_landmarks[i1] to pose_landmarks[i2].
@@ -202,29 +276,14 @@ def get_position_vector(i, shape, pose_landmarks) -> Vector:
     return Vector(pose_landmarks[i].x * shape[1], pose_landmarks[i].y * shape[0], 0)
 
 
-def get_form_vectors(triplets, shape, pose_landmarks) -> list:
-
-    form_vecs = []
-    for triplet in triplets:
-        v1 = get_direction_vector(triplet[0], triplet[1], shape, pose_landmarks)
-        v2 = get_direction_vector(triplet[1], triplet[2], shape, pose_landmarks)
-        v3 = v1 + v2
-
-        # p = get_position_vector(triplet[1], shape, pose_landmarks)
-        form_vec = v2.project(v3.normal())
-        form_vecs.append(form_vec)
-
-    return form_vecs
-
-
-def find_significant_correction(cor_arys, threshold=0.7):
+def find_significant_correction(cors_ary, threshold=0.7):
 
     sums = np.array([])
-    for i in range(len(cor_arys[0])):
+    for i in range(len(cors_ary[0])):
         col_sum = 0
-        for ary in cor_arys:
+        for ary in cors_ary:
             col_sum += float(ary[i])
-    avgs = sums / len(cor_arys)
+    avgs = sums / len(cors_ary)
 
     indices = []
     i = 0
@@ -236,162 +295,103 @@ def find_significant_correction(cor_arys, threshold=0.7):
 
 #  NEW FORMAT
 def analyze_image(img,
+                  model=None,
+                  static=False,
                   predict=True,
                   window=False,
-                  annotate=1,
+                  annotate=False,
                   hold=True,
-                  save_file=None,
-                  pose_options=mp_pose.Pose(
-                      static_image_mode=True,
-                      model_complexity=2,
-                      min_tracking_confidence=0.6
-                  ),
-                  destroy_windows=True):
-    # annotate: 0=none, 1=just interested, 2=mediapipe
-    if not isinstance(img, np.ndarray):
-        raise ValueError("Invalid image object. Pass a np.ndarray object.")
-    img = image.set_size(img, 800)
+                  save_file=None
+                  ):
 
-    pose_results = pose_options.process(img)
-    if not pose_results.pose_landmarks:
-        print("No landmarks found.")
-        return None, None
-    pose_landmarks = list(pose_results.pose_landmarks.landmark)
+    features = HandstandFeatures(img, static)
 
-    if isinstance(pose_landmarks[0], NormalizedLandmark):
-        print("No landmarks found.")
-        return
-    pose_landmarks = list(pose_results.pose_landmarks.landmark)
+    if not features.pose_landmarks:
+        return img, None
 
     shape = img.shape
-
-    # determine which side of the person is prominent
-    left_sum = 0
-    right_sum = 0
-    for i, j in zip(LEFT_FEATURES, RIGHT_FEATURES):
-        left_sum += pose_landmarks[i].visibility
-        right_sum += pose_landmarks[j].visibility
-
-    # get appropriate vectors based on side visible
-    if left_sum >= right_sum:
-        form_vectors = get_form_vectors(LEFT_CORRECTION_TRIPLETS, shape, pose_landmarks)
-    else:
-        form_vectors = get_form_vectors(RIGHT_CORRECTION_TRIPLETS, shape, pose_landmarks)
-
-    # convert vectors to a list of lists for ease of access in other modules
-    vectors_list = []
-    for vec in form_vectors:
-        #  normalize vectors left side of a person (simply flip x components)
-        if right_sum > left_sum:
-            vectors_list.append(vec.flip_x().to_list())
-        else:
-            vectors_list.append(vec.to_list())
 
     # predict form corrections with neural network by inputting form vectors
     corrections = None
     if predict:
-        corrections = predict_corrections(vectors_list)
+        corrections = predict_corrections(model, features.form_vectors, features.left_visible)
         i = 0
         for correction in CORRECTIONS:
-            if float(corrections[i]) > 0.09:
+            if float(corrections[i]) > 0.1:
                 print(correction + ": " + str(corrections[i]))
             i += 1
 
-    # handle annotations
-    if window or save_file:
-        if annotate == 1:  # only show relevant features and form vectors
+    # annotate image
+    if annotate:
+        if features.left_visible:
+            landmarks = LEFT_LANDMARKS
+            triplets = LEFT_CORRECTION_TRIPLETS
+        else:
+            landmarks = RIGHT_LANDMARKS
+            triplets = RIGHT_CORRECTION_TRIPLETS
 
-            if left_sum >= right_sum:
-                features = LEFT_FEATURES
-                triplets = LEFT_CORRECTION_TRIPLETS
-            else:
-                features = RIGHT_FEATURES
-                triplets = RIGHT_CORRECTION_TRIPLETS
+        for i in landmarks:
+            image.draw_landmark(img, get_position_vector(i, shape, features.pose_landmarks), (0, 255, 0))
+            j = 0
+            for vec in features.form_vectors:
+                image.draw_vector(
+                    img,
+                    vec,
+                    get_position_vector(triplets[j][1], shape, features.pose_landmarks),
+                    (0, 0, 255)
+                )
+                j += 1
 
-            for i in features:
-                image.draw_landmark(img, get_position_vector(i, shape, pose_landmarks), (0, 255, 0))
-                j = 0
-                for vec in form_vectors:
-                    image.draw_vector(
-                        img,
-                        vec,
-                        get_position_vector(triplets[j][1], shape, pose_landmarks),
-                        (0, 0, 255)
-                    )
-                    j += 1
+    # display output window
+    if window:
+        image.display(img, "Output", hold)
+        # image.display_with_pillow(img)
 
-        elif annotate == 2:  # use mediapipe's drawing util to draw landmarks and connections
-            mp_drawing_utils.draw_landmarks(img, pose_results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+    # save file
+    if save_file:
+        image.save(img, paths.OUTPUT_IMAGES, "output_image")
 
-        elif annotate != 0:  # don't do any annotations if 0, if other value: error
-            raise ValueError("Invalid annotate parameter value.")
-
-        if window:
-            image.display(img, "Output", hold)
-            # image.display_with_pillow(img)
-        if save_file:
-            image.save(img, paths.OUTPUT_IMAGES, "output_image")
-
-    if destroy_windows:
-        cv2.destroyAllWindows()
-
-    return corrections, vectors_list
+    del features
+    return corrections
 
 
 def analyze_video(filepath=None,
+                  model=None,
                   predict=True,
                   window=False,
-                  annotate=1,
+                  annotate=True,
                   save_file=None,
-                  exit_key=27,
-                  pause_key=32,
-                  pose_options=mp_pose.Pose(
-                      static_image_mode=False,
-                      smooth_landmarks=True,
-                      model_complexity=2,
-                      min_tracking_confidence=0.6),
                   period=1000,
                   ):
-    # annotate: 0=none, 1=just interested, 2=mediapipe
 
     if filepath:
-        cap = cv2.VideoCapture(str(filepath))
+        vid_thread = video.VideoThread(filepath)
     else:
-        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        vid_thread = video.VideoThread()
 
-    cap.set(cv2.CAP_PROP_BUFFERSIZE, 2)
+    target_ms = period
+    cors_ary = []
+    while vid_thread.run:
+        if vid_thread.status:
+            frame = image.set_size(vid_thread.input_frame, 800)
 
-    pause = False
-    pause_frame = 0
-    run = True
-    target_ms = int(cap.get(cv2.CAP_PROP_POS_MSEC)) + period
-    cor_arys = []
-    while run:
+            corrections = analyze_image(img=frame,
+                                        model=model,
+                                        static=False,
+                                        predict=predict,
+                                        window=False,
+                                        annotate=annotate,
+                                        hold=False)
 
-        ret, frame = cap.read()
-        ch = cv2.waitKey(1)
+            vid_thread.set_frame(frame)
 
-        if pause:
-            cap.set(cv2.CAP_PROP_POS_FRAMES, pause_frame)
-        elif ret:
-            frame = image.set_size(frame, 800)
-
-            cors, _ = analyze_image(frame, predict, window, annotate, False, False, pose_options, destroy_windows=False)
-            cor_arys.append(cors)
-            if int(cap.get(cv2.CAP_PROP_POS_MSEC)) >= target_ms:
-                sig_cors = find_significant_correction(cor_arys)
-                cor_lbls = ""
-                for i in sig_cors:
-                    cor_lbls += CORRECTIONS[i] + "\n"
-                print("Corrections:\n" + cor_lbls)
-                cor_arys.clear()
-                target_ms += period
-
-        if ch & 0xFF == exit_key or not ret:  # escape key
-            run = False
-        elif ch & 0xFF == pause_key:
-            pause = not pause
-            pause_frame = cap.get(cv2.CAP_PROP_POS_FRAMES)
-
-    cap.release()
-    cv2.destroyAllWindows()
+            if corrections is not None:
+                cors_ary.append(corrections)
+                if int(vid_thread.capture.get(cv2.CAP_PROP_POS_MSEC)) >= target_ms:
+                    sig_cors = find_significant_correction(cors_ary)
+                    cor_lbls = ""
+                    for i in sig_cors:
+                        cor_lbls += CORRECTIONS[i] + "\n"
+                    print("Corrections:\n" + cor_lbls)
+                    cors_ary.clear()
+                    target_ms += vid_thread.capture.get(cv2.CAP_PROP_POS_MSEC) + period
