@@ -4,14 +4,16 @@ import math
 import cv2
 
 import mediapipe.python.solutions.pose as mp_pose
+import numpy
 import numpy as np
+import queue
 from mediapipe.tasks.python.components.containers import NormalizedLandmark
 
 import paths
 from tasks import image
 from tasks import video
-from neural_network.predict import predict as predict_corrections
-
+from neural_network.predict import predict as make_prediction
+from tasks import audio
 
 LANDMARK_NAMES = (
     "nose",
@@ -217,7 +219,6 @@ class HandstandFeatures:
             pose_landmarks = list(pose_results.pose_landmarks.landmark)
             if not isinstance(pose_landmarks[0], NormalizedLandmark):  # double check this makes sense !!
                 return pose_landmarks
-        print("No landmarks found.")
         return None
 
     @staticmethod
@@ -276,50 +277,67 @@ def get_position_vector(i, shape, pose_landmarks) -> Vector:
     return Vector(pose_landmarks[i].x * shape[1], pose_landmarks[i].y * shape[0], 0)
 
 
-def find_significant_correction(cors_ary, threshold=0.7):
+def get_significant_corrections(ary):
 
-    sums = np.array([])
-    for i in range(len(cors_ary[0])):
-        col_sum = 0
-        for ary in cors_ary:
-            col_sum += float(ary[i])
-    avgs = sums / len(cors_ary)
+    num_cors = len(CORRECTIONS)
+    sig_tshld = 0.7
+    cnt_tshld = 0.7
 
-    indices = []
-    i = 0
-    for avg in avgs:
-        if avg >= threshold:
-            indices.append(i)
-    return indices
+    # each element of the array is now a collection of values for all the same correction type
+    ary = numpy.transpose(ary)
+
+    sig_cors = [False] * num_cors
+    for i in range(num_cors):
+        count = 0
+        for v in ary[i]:
+            if v >= sig_tshld:
+                count += 1
+        if float(count)/num_cors >= cnt_tshld:
+            sig_cors[i] = True
+    return sig_cors
 
 
 #  NEW FORMAT
-def analyze_image(img,
-                  model=None,
-                  static=False,
-                  predict=True,
-                  window=False,
-                  annotate=False,
-                  hold=True,
-                  save_file=None
-                  ):
+def analyze_image(
+    img, identify_model=None, correction_model=None, static=True,
+    output_window=False, annotate=False, save_file=None,
+):
+    """
+    Creates a HandstandFeatures class for a given image and uses it to determine if the subject is in a handstand. If
+    they are, it outputs the corrections they need to make.
+    :param img: A numpy image.
+    :param identify_model: The Keras identification model used to determine if a subject is in a handstand position.
+    :param correction_model: The Keras correction model used to determine the corrections the subject in the image
+    should make.
+    :param static: True if this image is being submitted on its own. False if it's one of a series of images in a video.
+    :param output_window: Display an output window.
+    :param annotate: Annotate the image. Numpy images are mutable, so annotations are applied directly to the instance.
+    Annotations are displayed if output_window is True.
+    :param save_file: Path for saving the output image. Doesn't save if None.
+    :return: corrections - a list of unit intervals corresponding to the chance each correction is needed
+    """
 
     features = HandstandFeatures(img, static)
 
-    if not features.pose_landmarks:
-        return img, None
+    if features.pose_landmarks is None:
+        print("No landmarks found.")
+        if output_window:
+            image.display(img, "Output Window", static)
+        return None
 
     shape = img.shape
 
     # predict form corrections with neural network by inputting form vectors
     corrections = None
-    if predict:
-        corrections = predict_corrections(model, features.form_vectors, features.left_visible)
-        i = 0
-        for correction in CORRECTIONS:
-            if float(corrections[i]) > 0.1:
-                print(correction + ": " + str(corrections[i]))
-            i += 1
+    hs = make_prediction(identify_model, features.form_vectors, features.left_visible)[0]
+    if hs > 0.6:
+        corrections = make_prediction(correction_model, features.form_vectors, features.left_visible)
+        # i = 0
+        # for correction in CORRECTIONS:
+        #     if float(corrections[i]) > 0.1:
+        #         print(correction + ": " + str(corrections[i]))
+        #     i += 1
+        # print("---------------")
 
     # annotate image
     if annotate:
@@ -343,55 +361,79 @@ def analyze_image(img,
                 j += 1
 
     # display output window
-    if window:
-        image.display(img, "Output", hold)
+    if output_window:
+        image.display(img, "Output Window", static)
         # image.display_with_pillow(img)
 
     # save file
     if save_file:
-        image.save(img, paths.OUTPUT_IMAGES, "output_image")
+        image.save(img, paths.OUTPUT_IMAGES / "output_image")
 
-    del features
     return corrections
 
 
-def analyze_video(filepath=None,
-                  model=None,
-                  predict=True,
-                  window=False,
-                  annotate=True,
-                  save_file=None,
-                  period=1000,
-                  ):
-
+def analyze_video(
+    filepath=None, identify_model=None, correction_model=None,
+    output_window=False, annotate=True, play_audio=True, save_file=None, interval=10,
+):
+    """
+    Retrieves corrections from the analyze_image method and compiles them from each frame. Finds significant corrections
+    within the given interval and outputs audio directions.
+    :param filepath: Path of input video. If not provided live video is retrieved from the system's primary webcam.
+    :param identify_model: The Keras identification model used to determine if a subject is in a handstand position.
+    :param correction_model: The Keras correction model used to determine the corrections the subject in the image
+    should make.
+    :param output_window: Display an output window.
+    :param annotate: Annotate the image. Numpy images are mutable, so annotations are applied directly to the instance.
+    Annotations are displayed if output_window is True.
+    :param play_audio: Whether to play audio prompts at the end of each interval period.
+    :param save_file: Path for saving the output image. Doesn't save if None.
+    :param interval: The time between frame outputs (in msec), during which correction data is compiled. At the end of
+    the interval, the correction data is analyzed to determine the necessary corrections within the interval.
+    :return: 
+    """
     if filepath:
-        vid_thread = video.VideoThread(filepath)
+        write = False
+        if save_file is not None:
+            write = True
+        vid_thread = video.VideoThread(filepath, write=write, path=save_file)
     else:
         vid_thread = video.VideoThread()
 
-    target_ms = period
+    target_ms = interval
+    audio_queue = audio.AudioQueue()
     cors_ary = []
     while vid_thread.run:
         if vid_thread.status:
             frame = image.set_size(vid_thread.input_frame, 800)
 
-            corrections = analyze_image(img=frame,
-                                        model=model,
-                                        static=False,
-                                        predict=predict,
-                                        window=False,
-                                        annotate=annotate,
-                                        hold=False)
+            corrections = analyze_image(
+                img=frame,
+                identify_model=identify_model,
+                correction_model=correction_model,
+                static=False,
+                output_window=False,
+                annotate=annotate
+            )
 
             vid_thread.set_frame(frame)
 
             if corrections is not None:
                 cors_ary.append(corrections)
                 if int(vid_thread.capture.get(cv2.CAP_PROP_POS_MSEC)) >= target_ms:
-                    sig_cors = find_significant_correction(cors_ary)
-                    cor_lbls = ""
-                    for i in sig_cors:
-                        cor_lbls += CORRECTIONS[i] + "\n"
-                    print("Corrections:\n" + cor_lbls)
+                    sig_cors = get_significant_corrections(cors_ary)
+                    print("CORRECTIONS:")
+                    if not np.any(sig_cors):
+                        print("**none significant**")
+                    else:
+                        cor_lbls = ""
+                        i = 0
+                        for v in sig_cors:
+                            if v:
+                                cor_lbls += CORRECTIONS[i] + "\n"
+                                if play_audio:
+                                    audio_queue.enqueue(audio.CORRECTION_AUDIOS[i])
+                            i += 1
+                        print(cor_lbls)
                     cors_ary.clear()
-                    target_ms += vid_thread.capture.get(cv2.CAP_PROP_POS_MSEC) + period
+                    target_ms += vid_thread.capture.get(cv2.CAP_PROP_POS_MSEC) + interval

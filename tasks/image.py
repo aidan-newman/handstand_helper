@@ -2,6 +2,10 @@ import cv2
 from pathlib import Path
 from numpy import ndarray
 from PIL import Image as pillowImage
+from tasks.file import get_safe_path
+
+
+EXIT_KEY = 27
 
 
 def set_size(img, size: int, set_height=True):
@@ -47,9 +51,15 @@ def compress_file(file, width=None, height=None, ignore_if_smaller=True, quality
 
 def display(img, name="Output Window", hold=True):
 
-    cv2.imshow(name, img)
     if hold:
-        cv2.waitKey(0)
+        while True:
+            cv2.imshow(name, img)
+            key = cv2.waitKey(0)
+            if key & 0xFF == EXIT_KEY:
+                break
+        cv2.destroyAllWindows()
+        return
+    cv2.imshow(name, img)
     cv2.waitKey(1)
 
 
@@ -63,22 +73,9 @@ def display_with_pillow(img, name="Output Window"):
         raise ValueError("Invalid image type. Pass an np.ndarray or a pathlib.Path.")
 
 
-def save(img, file, name):
+def save(img, path):
     #  save image, if the same file already exists add a valid copy number (ex. image(#).png)
-    fail = True
-    copy_num = 0
-    while fail:
-        if copy_num:
-            save_location = file / (name + "(" + str(copy_num) + ").png")
-        else:
-            save_location = file / (name + ".png")
-
-        if not save_location.is_file():
-            cv2.imwrite(str(save_location), img)
-            fail = False
-        else:
-            copy_num += 1
-    return
+    cv2.imwrite(str(get_safe_path(path)), img)
 
 
 def load(file):

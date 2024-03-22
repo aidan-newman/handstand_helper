@@ -1,19 +1,26 @@
 import shutil
+from pathlib import Path
 
 
-def safe_move(file, fldr):
-    #  move file, if the same file already exists add a  valid copy number (ex. image(#).png)
-    fail = True
+def get_safe_path(path: Path) -> Path:
+
     copy_num = 0
-    while fail:
+    while True:
         if copy_num:
-            save_location = fldr / (file.stem + "(" + str(copy_num) + ")" + file.suffix)
+            save_location = path.parent.absolute() / (path.stem + "(" + str(copy_num) + ")" + path.suffix)
         else:
-            save_location = fldr / file.name
+            save_location = path
 
         if not save_location.is_file():
-            shutil.move(file, save_location)
-            fail = False
-        else:
-            copy_num += 1
-    return
+            return save_location
+        copy_num += 1
+
+
+def safe_move(fldr: Path, file: Path):
+    """
+    Move file, if the same file already exists add a  valid copy number (ex. image(#).png)
+    :param fldr: Folder Path to move the file to.
+    :param file: Current Path of file to move.
+    :return:
+    """
+    shutil.move(file, get_safe_path(fldr / file.name))

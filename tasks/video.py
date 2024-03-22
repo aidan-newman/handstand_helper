@@ -2,15 +2,16 @@ import time
 from threading import Thread
 import cv2
 from tasks import image
+from tasks.file import get_safe_path
 
 
-PAUSE_KEY = 27
-EXIT_KEY = 32
+PAUSE_KEY = 32
+EXIT_KEY = 27
 
 
 class VideoThread:
 
-    def __init__(self, src=0, msec=100):
+    def __init__(self, src=0, display=True, msec=10, write=False, path=None):
         self.status = None
         self.input_frame = None
         self.output_frame = None
@@ -24,50 +25,65 @@ class VideoThread:
         self.read_thread = Thread(target=self.read, args=(src,))
         self.read_thread.daemon = True
         self.read_thread.start()
-        self.dspl_thread = Thread(target=self.display, args=(msec,))
-        self.dspl_thread.daemon = True
-        self.dspl_thread.start()
+        if display:
+            self.dspl_thread = Thread(target=self.display_and_write, args=(msec, write, path))
+            self.dspl_thread.daemon = True
+            self.dspl_thread.start()
 
-    def read(self, src):
+    def read(self, src,):
         if src == 0:
             self.capture = cv2.VideoCapture(src, cv2.CAP_DSHOW)
         else:
-            self.capture = cv2.VideoCapture(src)
+            self.capture = cv2.VideoCapture(str(src))
 
         self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 2)
 
         while self.run and self.capture.isOpened():
-            # print("read")
-            (self.status, self.input_frame) = self.capture.read()
-            self.input_frame = image.set_size(self.input_frame, 800)
-            if self.pause:
-                self.capture.set(cv2.CAP_PROP_POS_FRAMES, self.pause_frame)
-            time.sleep(0.01)
 
-    def display(self, msec):
+            (self.status, self.input_frame) = self.capture.read()
+            if self.status:
+                if self.pause:
+                    self.capture.set(cv2.CAP_PROP_POS_FRAMES, self.pause_frame)
+                time.sleep(0.01)
+            else:
+                self.run = False
+
+        self.capture.release()
+        cv2.destroyAllWindows()
+
+    def display_and_write(self, msec, write, path):
         while not self.capture:
             pass
+
+        # writer = None
+        # if write:
+        #     save_location = get_safe_path(path)
+        #     writer = cv2.VideoWriter(
+        #         str(save_location),
+        #         fourcc=cv2.VideoWriter_fourcc(*"MJPG"),
+        #         fps=20.0,
+        #         frameSize=(int(self.capture.get(3)), int(self.capture.get(4))),
+        #         isColor=True
+        #     )
 
         while self.run and self.capture.isOpened():
             if self.status:
                 if self.output_frame is not None:
                     cv2.imshow('Output Frame', self.output_frame)
+                    # if write:
+                    #     writer.write(self.output_frame)
                     self.output_frame = None
-                else:
-                    cv2.imshow('Output Frame', self.input_frame)
 
-                key = cv2.waitKey(msec)
-                # print("show")
+                    key = cv2.waitKey(1)
 
-                if key & 0xFF == EXIT_KEY:
-                    self.run = False
-                    self.capture.release()
-                    cv2.destroyAllWindows()
-                    exit(1)
-                elif key & 0xFF == PAUSE_KEY and self.pause_frame:
-                    self.pause = not self.pause
-                    # add one incase somehow vid is paused on frame 0
-                    self.pause_frame = self.capture.get(cv2.CAP_PROP_POS_FRAMES)+1
+                    if key & 0xFF == EXIT_KEY:
+                        self.run = False
+                        return
+                    elif key & 0xFF == PAUSE_KEY and self.pause_frame:
+                        self.pause = not self.pause
+                        # add one incase somehow vid is paused on frame 0
+                        self.pause_frame = self.capture.get(cv2.CAP_PROP_POS_FRAMES)+1
+        # writer.release()
 
     def set_frame(self, frame):
         self.output_frame = frame
