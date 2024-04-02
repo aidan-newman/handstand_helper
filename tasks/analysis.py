@@ -4,15 +4,13 @@ import math
 import cv2
 
 import mediapipe.python.solutions.pose as mp_pose
-import numpy
 import numpy as np
-import queue
 from mediapipe.tasks.python.components.containers import NormalizedLandmark
 
 import paths
 from tasks import image
 from tasks import video
-from neural_network.predict import predict as make_prediction
+from neural_network.predict import predict
 from tasks import audio
 
 LANDMARK_NAMES = (
@@ -284,7 +282,7 @@ def get_significant_corrections(ary):
     cnt_tshld = 0.7
 
     # each element of the array is now a collection of values for all the same correction type
-    ary = numpy.transpose(ary)
+    ary = np.transpose(ary)
 
     sig_cors = [False] * num_cors
     for i in range(num_cors):
@@ -300,7 +298,7 @@ def get_significant_corrections(ary):
 #  NEW FORMAT
 def analyze_image(
     img, identify_model=None, correction_model=None, static=True,
-    output_window=False, annotate=False, save_file=None,
+    display_window=False, annotate=False, save_file=None,
 ):
     """
     Creates a HandstandFeatures class for a given image and uses it to determine if the subject is in a handstand. If
@@ -310,7 +308,7 @@ def analyze_image(
     :param correction_model: The Keras correction model used to determine the corrections the subject in the image
     should make.
     :param static: True if this image is being submitted on its own. False if it's one of a series of images in a video.
-    :param output_window: Display an output window.
+    :param display_window: Display an output window.
     :param annotate: Annotate the image. Numpy images are mutable, so annotations are applied directly to the instance.
     Annotations are displayed if output_window is True.
     :param save_file: Path for saving the output image. Doesn't save if None.
@@ -321,7 +319,7 @@ def analyze_image(
 
     if features.pose_landmarks is None:
         print("No landmarks found.")
-        if output_window:
+        if display_window:
             image.display(img, "Output Window", static)
         return None
 
@@ -329,15 +327,9 @@ def analyze_image(
 
     # predict form corrections with neural network by inputting form vectors
     corrections = None
-    hs = make_prediction(identify_model, features.form_vectors, features.left_visible)[0]
+    hs = predict(identify_model, features.form_vectors, features.left_visible)[0]
     if hs > 0.6:
-        corrections = make_prediction(correction_model, features.form_vectors, features.left_visible)
-        # i = 0
-        # for correction in CORRECTIONS:
-        #     if float(corrections[i]) > 0.1:
-        #         print(correction + ": " + str(corrections[i]))
-        #     i += 1
-        # print("---------------")
+        corrections = predict(correction_model, features.form_vectors, features.left_visible)
 
     # annotate image
     if annotate:
@@ -361,9 +353,8 @@ def analyze_image(
                 j += 1
 
     # display output window
-    if output_window:
+    if display_window:
         image.display(img, "Output Window", static)
-        # image.display_with_pillow(img)
 
     # save file
     if save_file:
@@ -374,7 +365,7 @@ def analyze_image(
 
 def analyze_video(
     filepath=None, identify_model=None, correction_model=None,
-    output_window=False, annotate=True, play_audio=True, save_file=None, interval=10,
+    display_window=False, annotate=True, play_audio=True, save_file=None, interval=10,
 ):
     """
     Retrieves corrections from the analyze_image method and compiles them from each frame. Finds significant corrections
@@ -383,7 +374,7 @@ def analyze_video(
     :param identify_model: The Keras identification model used to determine if a subject is in a handstand position.
     :param correction_model: The Keras correction model used to determine the corrections the subject in the image
     should make.
-    :param output_window: Display an output window.
+    :param display_window: Display an output window.
     :param annotate: Annotate the image. Numpy images are mutable, so annotations are applied directly to the instance.
     Annotations are displayed if output_window is True.
     :param play_audio: Whether to play audio prompts at the end of each interval period.
@@ -392,13 +383,8 @@ def analyze_video(
     the interval, the correction data is analyzed to determine the necessary corrections within the interval.
     :return: 
     """
-    if filepath:
-        write = False
-        if save_file is not None:
-            write = True
-        vid_thread = video.VideoThread(filepath, write=write, path=save_file)
-    else:
-        vid_thread = video.VideoThread()
+
+    vid_thread = video.VideoThread(src=filepath, display=display_window)
 
     target_ms = interval
     audio_queue = audio.AudioQueue()
@@ -412,7 +398,7 @@ def analyze_video(
                 identify_model=identify_model,
                 correction_model=correction_model,
                 static=False,
-                output_window=False,
+                display_window=False,
                 annotate=annotate
             )
 

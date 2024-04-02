@@ -42,10 +42,4 @@ def predict(model, vectors, left_visible):
 
     predictions = model.predict(x, verbose=0)[0]
 
-    # i = 0
-    # for num in predictions:
-    #     predictions[i] = '{:.2f}'.format(num)
-    #     i += 1
-    # predictions = np.array(predictions, dtype=str)
-
     return predictions

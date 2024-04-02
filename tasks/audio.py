@@ -46,4 +46,3 @@ class AudioQueue:
     def _play_audio_thread(self, path):
         self.playing = True
         playsound(str(path))
-        self.done = True

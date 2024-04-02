@@ -55,7 +55,7 @@ def prepare_labels():
                     entry = input()
 
                     if str(entry).lower().strip() == "x":
-                        file.safe_move(paths.TRAINING_DATA / "corrections/bad_images", str(img.name + img.suffix))
+                        file.safe_move(paths.TRAINING_DATA / "corrections/bad_images", img)
                         break
                     elif str(entry).lower() == "stop":
                         cancel = True

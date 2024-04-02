@@ -29,7 +29,7 @@ def main(*args, **kwargs):
                     analysis.analyze_video(
                         correction_model=correction_model,
                         identify_model=identify_model,
-                        output_window=True,
+                        display_window=True,
                         annotate=True
                     )
 
@@ -60,7 +60,7 @@ def main(*args, **kwargs):
                                     filepath=paths.INPUT_VIDEOS / names[entry-1],
                                     correction_model=correction_model,
                                     identify_model=identify_model,
-                                    output_window=True,
+                                    display_window=True,
                                     annotate=True
                                 )
                                 break
@@ -92,7 +92,7 @@ def main(*args, **kwargs):
                                     img=paths.INPUT_IMAGES / names[entry-1],
                                     correction_model=correction_model,
                                     identify_model=identify_model,
-                                    output_window=True,
+                                    display_window=True,
                                     annotate=True
                                 )
                                 break

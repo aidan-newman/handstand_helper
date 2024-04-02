@@ -1,7 +1,6 @@
 import time
 from threading import Thread
 import cv2
-from tasks import image
 from tasks.file import get_safe_path
 
 
@@ -11,7 +10,7 @@ EXIT_KEY = 27
 
 class VideoThread:
 
-    def __init__(self, src=0, display=True, msec=10, write=False, path=None):
+    def __init__(self, src=None, display=True, msec=10):
         self.status = None
         self.input_frame = None
         self.output_frame = None
@@ -19,14 +18,17 @@ class VideoThread:
         self.run = True
         self.pause = False
 
-        if src == 0: self.pause_frame = None
-        else: self.pause_frame = 1
+        if src is None:
+            self.pause_frame = None
+            src = 0
+        else:
+            self.pause_frame = 1
 
         self.read_thread = Thread(target=self.read, args=(src,))
         self.read_thread.daemon = True
         self.read_thread.start()
         if display:
-            self.dspl_thread = Thread(target=self.display_and_write, args=(msec, write, path))
+            self.dspl_thread = Thread(target=self.display, args=(msec,))
             self.dspl_thread.daemon = True
             self.dspl_thread.start()
 
@@ -51,7 +53,7 @@ class VideoThread:
         self.capture.release()
         cv2.destroyAllWindows()
 
-    def display_and_write(self, msec, write, path):
+    def display(self, msec):
         while not self.capture:
             pass
 
