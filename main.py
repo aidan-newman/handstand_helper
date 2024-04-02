@@ -6,6 +6,7 @@ from neural_network.predict import load_corrections_model, load_identify_model
 
 def main(*args, **kwargs):
 
+    # testing
     print("Waiting for TensorFlow...")
     time.sleep(2)
 
