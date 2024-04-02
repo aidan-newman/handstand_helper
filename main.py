@@ -7,6 +7,7 @@ from tasks import image
 
 def main(*args, **kwargs):
 
+    # testing
     correction_model = load_corrections_model()
     identify_model = load_identify_model()
     
