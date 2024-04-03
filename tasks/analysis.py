@@ -252,13 +252,6 @@ class HandstandFeatures:
         return form_vectors, left_visible
 
 
-def format_floats(flts):
-    strs = []
-    for flt in flts:
-        strs.append(format(flt, '.2f'))
-    return strs
-
-
 def get_direction_vector(i1, i2, shape, pose_landmarks) -> Vector:
     """
     Returns the direction vector from pose_landmarks[i1] to pose_landmarks[i2].
@@ -331,7 +324,7 @@ def analyze_image(
     features = HandstandFeatures(img, static)
 
     if features.pose_landmarks is None:
-        print("No landmarks found.")
+        # print("No landmarks found.")
         if display:
             image.display(img, "Output Window", static)
         return img, None
@@ -343,9 +336,10 @@ def analyze_image(
     hs = predict(identify_model, features.form_vectors, features.left_visible)[0]
     if hs > 0.6:
         corrections = predict(correction_model, features.form_vectors, features.left_visible)
-        print(format_floats(corrections))
+        # print(corrections)
     else:
-        print("Not in handstand position.")
+        pass
+        # print("Not in handstand position.")
 
     # annotate image
     if annotate:
@@ -381,7 +375,7 @@ def analyze_image(
 
 def analyze_video(
     filepath=None, input_rotation=0, identify_model=None, correction_model=None,
-    display=False, annotate=True, play_audio=True, save_file=None, interval=10,
+    display=False, annotate=True, play_audio=True, save_file=None, interval=500,
 ):
     """
     Retrieves corrections from the analyze_image method and compiles them from each frame. Finds significant corrections
@@ -423,21 +417,20 @@ def analyze_video(
 
             if corrections is not None:
                 cors_ary.append(corrections)
-                print(int(vid_thread.capture.get(cv2.CAP_PROP_POS_MSEC)))
-                if int(vid_thread.capture.get(cv2.CAP_PROP_POS_MSEC)) >= target_ms:
-                    sig_cors = get_significant_corrections(cors_ary)
-                    print("CORRECTIONS:")
-                    if not np.any(sig_cors):
-                        print("**none significant**")
-                    else:
-                        cor_lbls = ""
-                        i = 0
-                        for v in sig_cors:
-                            if v:
-                                cor_lbls += CORRECTIONS[i] + "\n"
-                                if play_audio:
-                                    audio_queue.enqueue(audio.CORRECTION_AUDIOS[i])
-                            i += 1
-                        print(cor_lbls)
-                    cors_ary.clear()
-                    target_ms += vid_thread.capture.get(cv2.CAP_PROP_POS_MSEC) + interval
+            if vid_thread.timestamp >= target_ms and len(cors_ary) > 0:
+                sig_cors = get_significant_corrections(cors_ary)
+                print("CORRECTIONS:")
+                if not np.any(sig_cors):
+                    print("**none significant**")
+                else:
+                    cor_lbls = ""
+                    i = 0
+                    for v in sig_cors:
+                        if v:
+                            cor_lbls += CORRECTIONS[i] + "\n"
+                            if play_audio:
+                                audio_queue.enqueue(audio.CORRECTION_AUDIOS[i])
+                        i += 1
+                    print(cor_lbls)
+                cors_ary.clear()
+                target_ms += vid_thread.timestamp + interval
