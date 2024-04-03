@@ -297,31 +297,33 @@ def get_significant_corrections(ary):
 
 #  NEW FORMAT
 def analyze_image(
-    img, identify_model=None, correction_model=None, static=True,
-    display_window=False, annotate=False, save_file=None,
-):
+    img, input_rotation=0, identify_model=None, correction_model=None, static=True,
+    display=False, annotate=False, save_file=None,
+) -> (np.ndarray, list):
     """
     Creates a HandstandFeatures class for a given image and uses it to determine if the subject is in a handstand. If
     they are, it outputs the corrections they need to make.
     :param img: A numpy image.
+    :param input_rotation: Rotation option for input video. Options: 0 = no rotation, 90, 180, 270 (all cw).
     :param identify_model: The Keras identification model used to determine if a subject is in a handstand position.
     :param correction_model: The Keras correction model used to determine the corrections the subject in the image
     should make.
     :param static: True if this image is being submitted on its own. False if it's one of a series of images in a video.
-    :param display_window: Display an output window.
-    :param annotate: Annotate the image. Numpy images are mutable, so annotations are applied directly to the instance.
-    Annotations are displayed if output_window is True.
+    :param display: Display an output window.
+    :param annotate: Annotate the image. The annotated image is returned and displayed if display=True.
     :param save_file: Path for saving the output image. Doesn't save if None.
     :return: corrections - a list of unit intervals corresponding to the chance each correction is needed
     """
+    if input_rotation:
+        img = image.rotate(img, input_rotation)
 
     features = HandstandFeatures(img, static)
 
     if features.pose_landmarks is None:
         print("No landmarks found.")
-        if display_window:
+        if display:
             image.display(img, "Output Window", static)
-        return None
+        return img, None
 
     shape = img.shape
 
@@ -353,30 +355,30 @@ def analyze_image(
                 j += 1
 
     # display output window
-    if display_window:
+    if display:
         image.display(img, "Output Window", static)
 
     # save file
     if save_file:
         image.save(img, paths.OUTPUT_IMAGES / "output_image")
 
-    return corrections
+    return img, corrections
 
 
 def analyze_video(
-    filepath=None, identify_model=None, correction_model=None,
-    display_window=False, annotate=True, play_audio=True, save_file=None, interval=10,
+    filepath=None, input_rotation=0, identify_model=None, correction_model=None,
+    display=False, annotate=True, play_audio=True, save_file=None, interval=10,
 ):
     """
     Retrieves corrections from the analyze_image method and compiles them from each frame. Finds significant corrections
     within the given interval and outputs audio directions.
     :param filepath: Path of input video. If not provided live video is retrieved from the system's primary webcam.
+    :param input_rotation: Rotation option for input video, 0 = no rotation, 1 = 90d cw, 2 = 180d cw, 3 = 270cw
     :param identify_model: The Keras identification model used to determine if a subject is in a handstand position.
     :param correction_model: The Keras correction model used to determine the corrections the subject in the image
     should make.
-    :param display_window: Display an output window.
-    :param annotate: Annotate the image. Numpy images are mutable, so annotations are applied directly to the instance.
-    Annotations are displayed if output_window is True.
+    :param display: Display an output window.
+    :param annotate: Annotate the video feed.
     :param play_audio: Whether to play audio prompts at the end of each interval period.
     :param save_file: Path for saving the output image. Doesn't save if None.
     :param interval: The time between frame outputs (in msec), during which correction data is compiled. At the end of
@@ -384,7 +386,7 @@ def analyze_video(
     :return: 
     """
 
-    vid_thread = video.VideoThread(src=filepath, display=display_window)
+    vid_thread = video.VideoThread(src=filepath, display=display)
 
     target_ms = interval
     audio_queue = audio.AudioQueue()
@@ -393,12 +395,13 @@ def analyze_video(
         if vid_thread.status:
             frame = image.set_size(vid_thread.input_frame, 800)
 
-            corrections = analyze_image(
+            frame, corrections = analyze_image(
                 img=frame,
+                input_rotation=input_rotation,
                 identify_model=identify_model,
                 correction_model=correction_model,
                 static=False,
-                display_window=False,
+                display=False,
                 annotate=annotate
             )
 

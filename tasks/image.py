@@ -30,6 +30,18 @@ def set_size(img, size: int, set_height=True):
     return img
 
 
+def rotate(img, rotation):
+    if rotation == 90:
+        img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+    elif rotation == 180:
+        img = cv2.rotate(img, cv2.ROTATE_180)
+    elif rotation == 270:
+        img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    else:
+        raise ValueError("Invalid rotation value.")
+    return img
+
+
 def compress_file(file, width=None, height=None, ignore_if_smaller=True, quality=90):
     img = pillowImage.open(file)
 

@@ -32,7 +32,7 @@ class VideoThread:
             self.dspl_thread.daemon = True
             self.dspl_thread.start()
 
-    def read(self, src,):
+    def read(self, src):
         if src == 0:
             self.capture = cv2.VideoCapture(src, cv2.CAP_DSHOW)
         else:
@@ -43,6 +43,7 @@ class VideoThread:
         while self.run and self.capture.isOpened():
 
             (self.status, self.input_frame) = self.capture.read()
+            
             if self.status:
                 if self.pause:
                     self.capture.set(cv2.CAP_PROP_POS_FRAMES, self.pause_frame)
@@ -56,17 +57,6 @@ class VideoThread:
     def display(self, msec):
         while not self.capture:
             pass
-
-        # writer = None
-        # if write:
-        #     save_location = get_safe_path(path)
-        #     writer = cv2.VideoWriter(
-        #         str(save_location),
-        #         fourcc=cv2.VideoWriter_fourcc(*"MJPG"),
-        #         fps=20.0,
-        #         frameSize=(int(self.capture.get(3)), int(self.capture.get(4))),
-        #         isColor=True
-        #     )
 
         while self.run and self.capture.isOpened():
             if self.status:

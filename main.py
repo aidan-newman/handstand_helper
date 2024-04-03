@@ -4,6 +4,9 @@ from tasks import analysis
 from neural_network.predict import load_corrections_model, load_identify_model
 
 
+LIVE_ROTATION = 90  # rotate live video 90d cw
+
+
 def main(*args, **kwargs):
 
     # testing
@@ -29,8 +32,9 @@ def main(*args, **kwargs):
                 if entry == 1:
                     analysis.analyze_video(
                         correction_model=correction_model,
+                        input_rotation=LIVE_ROTATION,
                         identify_model=identify_model,
-                        display_window=True,
+                        display=True,
                         annotate=True
                     )
 
@@ -61,7 +65,7 @@ def main(*args, **kwargs):
                                     filepath=paths.INPUT_VIDEOS / names[entry-1],
                                     correction_model=correction_model,
                                     identify_model=identify_model,
-                                    display_window=True,
+                                    display=True,
                                     annotate=True
                                 )
                                 break
@@ -93,7 +97,7 @@ def main(*args, **kwargs):
                                     img=paths.INPUT_IMAGES / names[entry-1],
                                     correction_model=correction_model,
                                     identify_model=identify_model,
-                                    display_window=True,
+                                    display=True,
                                     annotate=True
                                 )
                                 break
