@@ -1,6 +1,7 @@
 import time
 import paths
 from tasks import analysis
+from tasks import image
 from neural_network.predict import load_corrections_model, load_identify_model
 
 
@@ -94,7 +95,7 @@ def main(*args, **kwargs):
                             entry = int(entry)
                             if 1 <= entry <= i:
                                 analysis.analyze_image(
-                                    img=paths.INPUT_IMAGES / names[entry-1],
+                                    img=image.load(paths.INPUT_IMAGES / names[entry-1]),
                                     correction_model=correction_model,
                                     identify_model=identify_model,
                                     display=True,
