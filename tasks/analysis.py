@@ -253,11 +253,10 @@ class HandstandFeatures:
 
 
 def format_floats(flts):
-    i = 0
+    strs = []
     for flt in flts:
-        flts[i] = '{:.2f}'.format(flt)
-        i += 1
-    return np.array(flts, dtype=str)
+        strs.append(format(flt, '.2f'))
+    return strs
 
 
 def get_direction_vector(i1, i2, shape, pose_landmarks) -> Vector:
