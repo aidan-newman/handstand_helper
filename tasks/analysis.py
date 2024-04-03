@@ -423,6 +423,7 @@ def analyze_video(
 
             if corrections is not None:
                 cors_ary.append(corrections)
+                print(int(vid_thread.capture.get(cv2.CAP_PROP_POS_MSEC)))
                 if int(vid_thread.capture.get(cv2.CAP_PROP_POS_MSEC)) >= target_ms:
                     sig_cors = get_significant_corrections(cors_ary)
                     print("CORRECTIONS:")
