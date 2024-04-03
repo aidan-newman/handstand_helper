@@ -13,6 +13,9 @@ from tasks import video
 from neural_network.predict import predict
 from tasks import audio
 
+
+INPUT_HEIGHT = 800
+
 LANDMARK_NAMES = (
     "nose",
     "left eye (inner)",
@@ -200,7 +203,7 @@ class HandstandFeatures:
 
     @staticmethod
     def get_pose_landmarks(img, static):
-        #  note: compresses image to a height of 800 -- image object is mutable, don't repeat
+        #  note: compresses image to a height of INPUT_HEIGHT -- image object is mutable, don't repeat
         if static:
             pose_options = STATIC_POSE_OPTIONS
         else:
@@ -208,7 +211,7 @@ class HandstandFeatures:
 
         if not isinstance(img, np.ndarray):
             raise ValueError("Invalid image object. Pass a np.ndarray object.")
-        img = image.set_size(img, 800)
+        img = image.set_size(img, INPUT_HEIGHT)
 
         # get pose landmarks from image
         # make sure this works !!
@@ -314,6 +317,7 @@ def analyze_image(
     :param save_file: Path for saving the output image. Doesn't save if None.
     :return: corrections - a list of unit intervals corresponding to the chance each correction is needed
     """
+
     if input_rotation:
         img = image.rotate(img, input_rotation)
 
@@ -393,7 +397,7 @@ def analyze_video(
     cors_ary = []
     while vid_thread.run:
         if vid_thread.status:
-            frame = image.set_size(vid_thread.input_frame, 800)
+            frame = vid_thread.input_frame
 
             frame, corrections = analyze_image(
                 img=frame,
