@@ -252,13 +252,6 @@ class HandstandFeatures:
         return form_vectors, left_visible
 
 
-def format_floats(flts):
-    strs = []
-    for flt in flts:
-        strs.append(format(flt, '.2f'))
-    return strs
-
-
 def get_direction_vector(i1, i2, shape, pose_landmarks) -> Vector:
     """
     Returns the direction vector from pose_landmarks[i1] to pose_landmarks[i2].
@@ -343,7 +336,7 @@ def analyze_image(
     hs = predict(identify_model, features.form_vectors, features.left_visible)[0]
     if hs > 0.6:
         corrections = predict(correction_model, features.form_vectors, features.left_visible)
-        print(format_floats(corrections))
+        print(corrections)
     else:
         print("Not in handstand position.")
 
