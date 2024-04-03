@@ -261,13 +261,14 @@ def train_identify():
         callbacks=[
             ModelCheckpoint(
                 paths.MODELS / "identify/.weights.h5",
-                monitor="loss",
+                monitor="accuracy",
                 verbose=1,
                 save_weights_only=True,
                 save_best_only=True
             )
         ]
     )
+
 
 def ask_continue():
 
