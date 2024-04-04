@@ -25,10 +25,24 @@ class AudioQueue:
         thread.daemon = True
         thread.start()
 
+    @property
+    def size(self):
+        return self.queue.qsize()
+
+    @property
+    def empty(self):
+        if self.size == 0:
+            return True
+        return False
+
     def kill(self):
-        while self.queue.get():
-            pass
+        while not self.empty:
+            self.queue.get()
         self.stop = True
+
+    def clear(self):
+        while not self.empty:
+            self.queue.get()
 
     def enqueue(self, task):
         if self.stop:
