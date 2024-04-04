@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import math
-import cv2
-
-import mediapipe.python.solutions.pose as mp_pose
 import numpy as np
+import mediapipe.python.solutions.pose as mp_pose
 from mediapipe.tasks.python.components.containers import NormalizedLandmark
 
 import paths
@@ -14,6 +12,7 @@ from neural_network.predict import predict
 from tasks import audio
 
 
+VIDEO_INCREMENT = 2000
 INPUT_HEIGHT = 800
 
 LANDMARK_NAMES = (
@@ -300,7 +299,7 @@ def get_significant_corrections(ary):
         for v in ary[i]:
             if v >= sig_tshld:
                 count += 1
-        if float(count)/num_cors >= cnt_tshld:
+        if float(count)/len(ary[i]) >= cnt_tshld:
             sig_cors[i] = True
     return sig_cors
 
@@ -341,8 +340,9 @@ def analyze_image(
     # predict form corrections with neural network by inputting form vectors
     corrections = None
     hs = predict(identify_model, features.form_vectors, features.left_visible)[0]
-    if hs > 0.6:
+    if hs > 0.75:
         corrections = predict(correction_model, features.form_vectors, features.left_visible)
+        print(features.left_visible)
         print(format_floats(corrections))
     else:
         pass
@@ -382,7 +382,7 @@ def analyze_image(
 
 def analyze_video(
     filepath=None, input_rotation=0, identify_model=None, correction_model=None,
-    display=False, annotate=True, play_audio=True, save_file=None, interval=500,
+    display=False, annotate=True, play_audio=True, save_file=None, interval=VIDEO_INCREMENT,
 ):
     """
     Retrieves corrections from the analyze_image method and compiles them from each frame. Finds significant corrections
@@ -424,7 +424,10 @@ def analyze_video(
 
             if corrections is not None:
                 cors_ary.append(corrections)
-            if vid_thread.timestamp >= target_ms and len(cors_ary) > 0:
+                print("current: " + str(vid_thread.timestamp))
+                print("target: " + str(target_ms))
+                print("ary_size: " + str(len(cors_ary)))
+            if vid_thread.timestamp >= target_ms and len(cors_ary) >= 3:
                 sig_cors = get_significant_corrections(cors_ary)
                 print("CORRECTIONS:")
                 if not np.any(sig_cors):
@@ -432,6 +435,8 @@ def analyze_video(
                 else:
                     cor_lbls = ""
                     i = 0
+                    if not audio_queue.empty:
+                        audio_queue.clear()
                     for v in sig_cors:
                         if v:
                             cor_lbls += CORRECTIONS[i] + "\n"
@@ -440,4 +445,4 @@ def analyze_video(
                         i += 1
                     print(cor_lbls)
                 cors_ary.clear()
-                target_ms += vid_thread.timestamp + interval
+                target_ms = vid_thread.timestamp + interval
