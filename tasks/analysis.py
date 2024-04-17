@@ -192,6 +192,9 @@ class Vector:
 class HandstandFeatures:
 
     def __init__(self, img, static):
+        # only accept pre-compressed images
+        if img.shape[0] != INPUT_HEIGHT:
+            raise ValueError("Images must have a height of " + str(INPUT_HEIGHT) + " pixels.")
 
         self.pose_landmarks = self.get_pose_landmarks(img, static)
         self.form_vectors = None
@@ -202,7 +205,6 @@ class HandstandFeatures:
 
     @staticmethod
     def get_pose_landmarks(img, static):
-        #  note: compresses image to a height of INPUT_HEIGHT -- image object is mutable, don't repeat
         if static:
             pose_options = STATIC_POSE_OPTIONS
         else:
@@ -210,7 +212,6 @@ class HandstandFeatures:
 
         if not isinstance(img, np.ndarray):
             raise ValueError("Invalid image object. Pass a np.ndarray object.")
-        img = image.set_size(img, INPUT_HEIGHT)
 
         # get pose landmarks from image
         # make sure this works !!
@@ -327,6 +328,9 @@ def analyze_image(
     if input_rotation:
         img = image.rotate(img, input_rotation)
 
+    if img.shape[0] != INPUT_HEIGHT:
+        img = image.set_size(img, INPUT_HEIGHT)
+
     features = HandstandFeatures(img, static)
 
     if features.pose_landmarks is None:
@@ -419,7 +423,6 @@ def analyze_video(
                 display=False,
                 annotate=annotate
             )
-
             vid_thread.set_frame(frame)
 
             if corrections is not None:
