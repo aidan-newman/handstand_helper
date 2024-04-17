@@ -330,7 +330,7 @@ def analyze_image(
     features = HandstandFeatures(img, static)
 
     if features.pose_landmarks is None:
-        print("No landmarks found.")
+        # print("No landmarks found.")
         if display:
             image.display(img, "Output Window", static)
         return img, None
@@ -342,11 +342,11 @@ def analyze_image(
     hs = predict(identify_model, features.form_vectors, features.left_visible)[0]
     if hs > 0.75:
         corrections = predict(correction_model, features.form_vectors, features.left_visible)
-        print(features.left_visible)
-        print(format_floats(corrections))
+        # print(features.left_visible)
+        # print(format_floats(corrections))
     else:
         pass
-        print("Not in handstand position.")
+        # print("Not in handstand position.")
 
     # annotate image
     if annotate:
@@ -424,9 +424,7 @@ def analyze_video(
 
             if corrections is not None:
                 cors_ary.append(corrections)
-                print("current: " + str(vid_thread.timestamp))
-                print("target: " + str(target_ms))
-                print("ary_size: " + str(len(cors_ary)))
+
             if vid_thread.timestamp >= target_ms and len(cors_ary) >= 3:
                 sig_cors = get_significant_corrections(cors_ary)
                 print("CORRECTIONS:")
