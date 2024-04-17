@@ -5,14 +5,14 @@ from tasks import image
 from neural_network.predict import load_corrections_model, load_identify_model
 
 
-LIVE_ROTATION = 270  # rotate live video 90d cw
+LIVE_ROTATION = 270  # rotate live video 270d cw
 
 
 def main(*args, **kwargs):
 
     # testing
     print("Waiting for TensorFlow...")
-    time.sleep(2)
+    time.sleep(1)
 
     while True:
         entry = input("Select an option:\n"
