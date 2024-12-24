@@ -5,7 +5,7 @@ from tasks import image
 from neural_network.predict import load_corrections_model, load_identify_model
 
 
-LIVE_ROTATION = 270  # rotate live video 270d cw
+LIVE_ROTATION = 0  # rotate live video 0 deg cw
 
 
 def main(*args, **kwargs):

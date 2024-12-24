@@ -46,6 +46,8 @@ def prepare_labels():
         if img.name.endswith(".jpg") or img.name.endswith(".png"):
             img_count += 1
             image.compress_file(img, height=IMAGE_SAVE_HEIGHT)
+            features = analysis.HandstandFeatures(img, False)
+
 
             row = [str(index) + img.suffix]
             for c in analysis.CORRECTIONS:
